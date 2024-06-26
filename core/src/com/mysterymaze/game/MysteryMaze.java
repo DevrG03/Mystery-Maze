@@ -17,7 +17,7 @@ public class MysteryMaze extends ApplicationAdapter {
 	private static final int CELL_SIZE = 20;
 	private int offsetX;
 	private int offsetY;
-    private float timeSinceLastMove = 0f;
+	private float timeSinceLastMove = 0f;
 
 	@Override
 	public void create() {
@@ -55,9 +55,9 @@ public class MysteryMaze extends ApplicationAdapter {
 
 	private void handleInput(float deltaTime) {
 		timeSinceLastMove += deltaTime;
-        // Movement delay in seconds
-        float movementCooldown = 0.2f;
-        if (timeSinceLastMove >= movementCooldown) {
+		// Movement delay in seconds
+		float movementCooldown = 0.2f;
+		if (timeSinceLastMove >= movementCooldown) {
 			if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W)) {
 				if (maze.getMaze()[character.getX()][character.getY() - 1] == 1) {
 					character.moveDown();
