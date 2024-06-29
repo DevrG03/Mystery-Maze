@@ -1,5 +1,8 @@
 package com.mysterymaze.game;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
@@ -65,6 +68,26 @@ public class Maze {
         Direction(int dx, int dy) {
             this.dx = dx;
             this.dy = dy;
+        }
+    }
+
+    public void drawMaze(SpriteBatch batch, int offsetX, int offsetY, int CELL_SIZE, Texture wallTexture1, Texture wallTexture2, Texture floorTexture) {
+        int[][] mazeArray = this.getMaze();
+        for (int y = 0; y < mazeArray.length; y++) {
+            for (int x = 0; x < mazeArray[y].length; x++) {
+                int y1 = offsetY + (mazeArray.length - y - 1) * CELL_SIZE, x1 = offsetX + x * CELL_SIZE;
+                if (mazeArray[x][y] == 0) {  // Draw wall
+                    if (this.hasFloorBelow(x, y)) {
+                        batch.draw(wallTexture2, x1, y1, CELL_SIZE, CELL_SIZE);
+                    } else {
+                        batch.draw(wallTexture1, x1, y1, CELL_SIZE, CELL_SIZE);
+                        // Draw a different wall texture here for no wall below
+                        // Example: batch.draw(differentWallTexture, x * CELL_SIZE, (mazeArray.length - y - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    }
+                } else {  // Draw path
+                    batch.draw(floorTexture, x1, y1, CELL_SIZE, CELL_SIZE);
+                }
+            }
         }
     }
 }
