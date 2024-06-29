@@ -2,41 +2,178 @@ package com.mysterymaze.game;
 
 import java.util.List;
 
+/**
+ * Represents an enemy in the game that patrols and may chase the hero.
+ */
 public class Enemy {
-    private int x;
-    private int y;
-    private List<int[]> patrolPath;
-    private int pathIndex;
-    private boolean movingForward;
+    private int x;  // Current x-coordinate of the enemy
+    private int y;  // Current y-coordinate of the enemy
+    private final List<int[]> patrolPath;  // List of coordinates for the enemy's patrol path
+    private int pathIndex;  // Index of the current position in the patrol path
+    private boolean movingForward;  // Flag indicating direction of patrol
 
-    private float movementCooldown = 0.5f; // Adjust this value to control the speed
-    private float timeSinceLastMove = 0f;
+    private float timeSinceLastMove = 0f;  // Time elapsed since the last movement
+    private boolean isChasing = false;  // Flag indicating if the enemy is currently chasing the hero
 
-    public Enemy(int x, int y, List<int[]> patrolPath) {
+    private final Hero hero;  // Reference to the hero character
+    private final Pathfinding pathfinding;  // Object for pathfinding operations
+    private List<int[]> currentPath;  // Current path for the enemy's movement
+    private int pathStep;  // Index of the current step in the path
+    private List<int[]> returnPath;  // Path to return to patrol after chasing
+
+    /**
+     * Constructor to initialize an enemy with a patrol path, hero reference, and maze for pathfinding.
+     *
+     * @param x          Initial x-coordinate
+     * @param y          Initial y-coordinate
+     * @param patrolPath List of coordinates defining the patrol path
+     * @param hero       Reference to the hero character
+     * @param maze       Maze object for pathfinding and obstruction checks
+     */
+    public Enemy(int x, int y, List<int[]> patrolPath, Hero hero, Maze maze) {
         this.x = x;
         this.y = y;
         this.patrolPath = patrolPath;
         this.pathIndex = 0;
         this.movingForward = true;
+        this.hero = hero;
+        this.pathfinding = new Pathfinding(maze);
+        this.currentPath = null;
+        this.pathStep = 0;
+        this.returnPath = null;
     }
 
+    /**
+     * Get the current x-coordinate of the enemy.
+     *
+     * @return Current x-coordinate
+     */
     public int getX() {
         return x;
     }
 
+    /**
+     * Get the current y-coordinate of the enemy.
+     *
+     * @return Current y-coordinate
+     */
     public int getY() {
         return y;
     }
 
-    public void update(float deltaTime) {
+    /**
+     * Update method called to process enemy behavior based on time and maze conditions.
+     *
+     * @param deltaTime Time elapsed since the last update
+     * @param maze      Maze object for pathfinding and obstruction checks
+     */
+    public void update(float deltaTime, Maze maze) {
         timeSinceLastMove += deltaTime;
+        float movementCooldown = 0.5f;  // Adjust this value to control the speed of enemy movement
+
+        // Check if enough time has passed to allow movement
         if (timeSinceLastMove >= movementCooldown) {
-            move();
-            timeSinceLastMove = 0f;
+            // Determine whether to chase the hero, revert to patrol, or continue patrolling
+            if (isHeroVisible(maze)) {
+                chaseHero();
+            } else {
+                if (isChasing) {
+                    // Hero went out of range or is obstructed, reset path and revert to patrol
+                    resetPath();
+                    revertToPatrol();
+                } else {
+                    patrol();
+                }
+            }
+            timeSinceLastMove = 0f;  // Reset movement cooldown
         }
     }
 
-    private void move() {
+    /**
+     * Check if the hero is within the chasing range of the enemy.
+     *
+     * @return True if hero is within chasing range, false otherwise
+     */
+    private boolean isHeroInRange() {
+        float distance = (float) Math.sqrt(Math.pow(hero.getX() - x, 2) + Math.pow(hero.getY() - y, 2));
+        // Range within which the enemy will chase the hero
+        float chaseRange = 5f;
+        return distance <= chaseRange;
+    }
+
+    /**
+     * Check if the hero is visible to the enemy (line of sight and no obstacles).
+     *
+     * @param maze Maze object for obstruction checks
+     * @return True if hero is visible and within range, false otherwise
+     */
+    private boolean isHeroVisible(Maze maze) {
+        if (isHeroInRange()) {
+            List<int[]> lineOfSight = Bresenham.line(x, y, hero.getX(), hero.getY());
+            for (int[] pos : lineOfSight) {
+                if (!maze.isFree(pos[0], pos[1])) {
+                    return false; // Obstacle in the way
+                }
+            }
+            return true; // No obstacles in the way
+        }
+        return false; // Hero out of range
+    }
+
+    /**
+     * Move towards the hero's position to chase.
+     */
+    private void chaseHero() {
+        isChasing = true;
+        if (currentPath == null || pathStep >= currentPath.size()) {
+            currentPath = pathfinding.findPath(x, y, hero.getX(), hero.getY());
+            pathStep = 0;
+        }
+        if (currentPath != null && pathStep < currentPath.size()) {
+            int[] nextStep = currentPath.get(pathStep);
+            x = nextStep[0];
+            y = nextStep[1];
+            pathStep++;
+        }
+    }
+
+    /**
+     * Reset the current path and return path variables.
+     */
+    private void resetPath() {
+        currentPath = null;
+        pathStep = 0;
+        returnPath = null;
+    }
+
+    /**
+     * Return to the patrol path after chasing the hero.
+     */
+    private void revertToPatrol() {
+        isChasing = false;
+        if (returnPath == null) {
+            int[] patrolStart = patrolPath.get(0);
+            returnPath = pathfinding.findPath(x, y, patrolStart[0], patrolStart[1]);
+            pathStep = 0;
+        }
+        if (returnPath != null && pathStep < returnPath.size()) {
+            int[] nextStep = returnPath.get(pathStep);
+            x = nextStep[0];
+            y = nextStep[1];
+            pathStep++;
+        } else {
+            patrol();
+            resetPath(); // Reached the start of the patrol path, reset to patrol mode
+        }
+    }
+
+    /**
+     * Patrol along the predefined path.
+     */
+    private void patrol() {
+        if (patrolPath.isEmpty()) {
+            return; // No patrol path defined
+        }
         if (movingForward) {
             pathIndex++;
             if (pathIndex >= patrolPath.size()) {
