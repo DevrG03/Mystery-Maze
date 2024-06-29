@@ -4,8 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.*;
 
@@ -20,10 +23,12 @@ public class GameScreen implements Screen {
     private final Maze maze;
     private final Hero character;
     private static final int CELL_SIZE = 20;
-    private final int offsetX, offsetY;
     private final java.util.List<Enemy> enemies;
     private boolean paused;
     private boolean justPaused;
+    private OrthographicCamera camera;
+    private Viewport viewport;
+
 
     /**
      * Constructs the game screen with necessary textures, maze, character, and enemies.
@@ -40,18 +45,16 @@ public class GameScreen implements Screen {
         characterTexture = new Texture(Gdx.files.internal("V01_MainCharacter.png"));
         maze = new Maze(21, 21);  // Create a 21x21 maze
         character = new Hero(1, 1);
-        enemies = new java.util.ArrayList<>();
+        enemies = new ArrayList<>();
 
-        int screenWidth = Gdx.graphics.getWidth();
-        int screenHeight = Gdx.graphics.getHeight();
+        // Initialize the camera and viewport with logical size
+        camera = new OrthographicCamera();
+        viewport = new FitViewport(21 * CELL_SIZE, 21 * CELL_SIZE, camera); // Fixed logical size based on maze dimensions
+        viewport.apply();
 
-        // Calculate maze dimensions in pixels
-        int mazeWidthInPixels = maze.getWidth() * CELL_SIZE;
-        int mazeHeightInPixels = maze.getHeight() * CELL_SIZE;
-
-        // Calculate offset to center the maze on screen
-        offsetX = (screenWidth - mazeWidthInPixels) / 2;
-        offsetY = (screenHeight - mazeHeightInPixels) / 2;
+        // Center the camera
+        camera.position.set(viewport.getWorldWidth() / 2, viewport.getWorldHeight() / 2, 0);
+        camera.update();
 
         placeEnemies(5);
 
@@ -63,19 +66,23 @@ public class GameScreen implements Screen {
         // Called when this screen becomes the current screen for a Game
     }
 
-    @Override
     public void render(float delta) {
-        // Clear screen with white color
+        // Clear screen with black color
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         handlePauseInput();
 
+        // Update the camera
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+        viewport.apply();  // Apply the viewport
+
         // Draw game elements
         if (!paused) {
             batch.begin();
-            maze.drawMaze(batch, offsetX, offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture);
-            drawCharacter();
-            updateAndDrawEnemies();
+            maze.drawMaze(batch, 0, 0, CELL_SIZE, wallTexture1, wallTexture2, floorTexture);
+            drawCharacter(0, 0);
+            updateAndDrawEnemies(0, 0);
             batch.end();
 
             // Handle game logic
@@ -215,14 +222,15 @@ public class GameScreen implements Screen {
     /**
      * Draws the main character on the screen.
      */
-    private void drawCharacter() {
-        batch.draw(characterTexture, offsetX + character.getX() * CELL_SIZE, offsetY + (maze.getMaze().length - character.getY() - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    private void drawCharacter(int offsetX, int offsetY) {
+        batch.draw(characterTexture, offsetX + character.getX() * CELL_SIZE, offsetY + (maze.getHeight() - character.getY() - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
+
 
     /**
      * Updates and draws all enemies on the screen.
      */
-    private void updateAndDrawEnemies() {
+    private void updateAndDrawEnemies(int offsetX, int offsetY) {
         float deltaTime = Gdx.graphics.getDeltaTime();
         for (Enemy enemy : enemies) {
             enemy.update(deltaTime, maze);
@@ -245,8 +253,9 @@ public class GameScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        // Adjust screen size
-        batch.getProjectionMatrix().setToOrtho2D(0, 0, width, height);
+        viewport.update(width, height, true);
+        camera.position.set(viewport.getWorldWidth() / 2, viewport.getWorldHeight() / 2, 0);
+        camera.update();
     }
 
     @Override
