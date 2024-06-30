@@ -3,6 +3,9 @@ package com.mysterymaze.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents the main character (hero) in the game.
  */
@@ -10,6 +13,7 @@ public class Hero {
     private int x;
     private int y;
     private float timeSinceLastMove = 0f;
+    private List<Bomb> bombs;
 
     /**
      * Constructs a hero at the specified starting coordinates.
@@ -20,6 +24,7 @@ public class Hero {
     public Hero(int startX, int startY) {
         this.x = startX;
         this.y = startY;
+        this.bombs = new ArrayList<>();;
     }
 
     /**
@@ -112,8 +117,32 @@ public class Hero {
                     moved = true;
                 }
             }
+            if (Gdx.input.isKeyPressed(Input.Keys.B) && canDropBomb()) {
+                dropBomb();
+                this.timeSinceLastMove = 0f; // Optional: reset cooldown to prevent immediate re-dropping
+                moved = true; // Indicate movement occurred (dropping bomb is considered an action)
+            }
         }
         return moved; // Return whether movement occurred
+    }
+
+    /**
+     * Checks if the hero can drop a bomb (i.e., no unexploded bombs).
+     *
+     * @return True if a bomb can be dropped, false otherwise.
+     */
+    private boolean canDropBomb() {
+        for (Bomb bomb : bombs) {
+            if (!bomb.hasExploded()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void dropBomb() {
+        bombs.add(new Bomb(this.x, this.y));
+        Gdx.app.log("MysteryMaze","Bomb Dropped!");
     }
 
     /**
@@ -125,5 +154,9 @@ public class Hero {
     public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;
+    }
+
+    public Iterable<Bomb> getBombs() {
+        return bombs;
     }
 }

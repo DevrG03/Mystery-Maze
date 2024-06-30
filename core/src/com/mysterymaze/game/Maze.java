@@ -16,6 +16,8 @@ public class Maze {
     private final int height;
     private final int[][] maze;
     private final Random random = new Random();
+    private int doorX, doorY;
+    private int keyX, keyY;
 
     /**
      * Constructs a maze with the specified dimensions and initializes it with walls.
@@ -32,6 +34,7 @@ public class Maze {
             Arrays.fill(row, 0);
         }
         generateMaze(1, 1); // Generate the maze starting from (1, 1)
+        placeDoorAndKey();
     }
 
     /**
@@ -136,7 +139,55 @@ public class Maze {
     }
 
     /**
-     * Draws the maze using textures for walls and floor.
+     * Places the door and key in the maze ensuring the door replaces a wall piece and the key is on a valid floor tile.
+     */
+    private void placeDoorAndKey() {
+        int spawnX = 1, spawnY = 1; // Assuming the spawn point is (1, 1)
+
+        // Place the door on a wall piece
+        do {
+            doorX = random.nextInt(width);
+            doorY = random.nextInt(height);
+        } while (!isWall(doorX, doorY) || isTooCloseToSpawn(doorX, doorY, spawnX, spawnY));
+
+        // Place the key on a floor tile
+        do {
+            keyX = random.nextInt(width);
+            keyY = random.nextInt(height);
+        } while (!isFree(keyX, keyY) || isTooCloseToSpawn(keyX, keyY, spawnX, spawnY));
+    }
+
+    /**
+     * Checks if a position is a wall.
+     *
+     * @param x The x coordinate to check
+     * @param y The y coordinate to check
+     * @return true if the position is a wall, false otherwise
+     */
+    private boolean isWall(int x, int y) {
+        if (x < 0 || y < 0 || x >= maze.length || y >= maze[0].length) {
+            return false; // Out of bounds
+        }
+        return maze[x][y] == 0; // 0 represents a wall
+    }
+
+    /**
+     * Checks if a position is too close to the spawn point.
+     *
+     * @param x The x coordinate to check
+     * @param y The y coordinate to check
+     * @param spawnX The x coordinate of the spawn point
+     * @param spawnY The y coordinate of the spawn point
+     * @return true if the position is too close to the spawn point, false otherwise
+     */
+    private boolean isTooCloseToSpawn(int x, int y, int spawnX, int spawnY) {
+        int dx = x - spawnX;
+        int dy = y - spawnY;
+        return dx * dx + dy * dy < 25; // Adjust distance threshold as needed
+    }
+
+    /**
+     * Draws the maze using textures for walls, floor, door, and key.
      *
      * @param batch     The SpriteBatch used for drawing
      * @param offsetX   The x offset to start drawing from
@@ -145,25 +196,30 @@ public class Maze {
      * @param wallTexture1 The texture for walls
      * @param wallTexture2 The texture for walls where there is a floor below
      * @param floorTexture The texture for the floor (path)
+     * @param doorTexture  The texture for the door
+     * @param keyTexture   The texture for the key
      */
     public void drawMaze(SpriteBatch batch, int offsetX, int offsetY, int CELL_SIZE,
-                         Texture wallTexture1, Texture wallTexture2, Texture floorTexture) {
+                         Texture wallTexture1, Texture wallTexture2, Texture floorTexture,
+                         Texture doorTexture, Texture keyTexture) {
         int[][] mazeArray = this.getMaze();
         for (int y = 0; y < mazeArray.length; y++) {
             for (int x = 0; x < mazeArray[y].length; x++) {
                 int y1 = offsetY + (mazeArray.length - y - 1) * CELL_SIZE, x1 = offsetX + x * CELL_SIZE;
                 if (mazeArray[x][y] == 0) {  // Draw wall
-                    if (this.hasFloorBelow(x, y)) {
+                    if (x == doorX && y == doorY) {
+                        batch.draw(doorTexture, x1, y1, CELL_SIZE, CELL_SIZE);
+                    } else if (this.hasFloorBelow(x, y)) {
                         batch.draw(wallTexture2, x1, y1, CELL_SIZE, CELL_SIZE);
                     } else {
                         batch.draw(wallTexture1, x1, y1, CELL_SIZE, CELL_SIZE);
-                        // Example of drawing a different wall texture when there's no wall below:
-                        // batch.draw(differentWallTexture, x1, y1, CELL_SIZE, CELL_SIZE);
                     }
                 } else {  // Draw floor (path)
                     batch.draw(floorTexture, x1, y1, CELL_SIZE, CELL_SIZE);
                 }
             }
         }
+        // Draw the key
+        batch.draw(keyTexture, offsetX + keyX * CELL_SIZE, offsetY + (mazeArray.length - keyY - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
 }

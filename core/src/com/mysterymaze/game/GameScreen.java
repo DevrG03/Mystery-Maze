@@ -20,6 +20,7 @@ public class GameScreen implements Screen {
     private final SpriteBatch batch;
     private final Texture wallTexture1, wallTexture2, floorTexture;
     private final Texture characterTexture, enemyTexture;
+    private final Texture doorTexture, keyTexture;
     private final Maze maze;
     private final Hero character;
     private static final int CELL_SIZE = 20;
@@ -28,6 +29,8 @@ public class GameScreen implements Screen {
     private boolean justPaused;
     private final OrthographicCamera camera;
     private final Viewport viewport;
+    Texture bombTexture;
+    List<Bomb> bombs;
 
     // HUD variables
     private float timer;
@@ -42,15 +45,19 @@ public class GameScreen implements Screen {
      */
     public GameScreen(final MysteryMaze game) {
         this.game = game;
+        doorTexture = new Texture(Gdx.files.internal("V01_Door.png"));
+        keyTexture = new Texture(Gdx.files.internal("V01_Key.png"));
         batch = new SpriteBatch();
         wallTexture1 = new Texture(Gdx.files.internal("V01_Tile1.png"));
         wallTexture2 = new Texture(Gdx.files.internal("V01_Tile2.png"));
         floorTexture = new Texture(Gdx.files.internal("V01_Tile3.png"));
         enemyTexture = new Texture(Gdx.files.internal("V01_Enemy.png"));
         characterTexture = new Texture(Gdx.files.internal("V01_MainCharacter.png"));
+        bombTexture = new Texture(Gdx.files.internal("V01_Bomb.png"));
         maze = new Maze(21, 21);  // Create a 21x21 maze
         character = new Hero(1, 1);
         enemies = new ArrayList<>();
+        bombs = new ArrayList<>();
 
         // Initialize the camera and viewport with logical size
         camera = new OrthographicCamera();
@@ -97,14 +104,15 @@ public class GameScreen implements Screen {
             // Center the maze drawing
             float offsetX = (viewport.getWorldWidth() - maze.getWidth() * CELL_SIZE) / 2;
             float offsetY = (viewport.getWorldHeight() - maze.getHeight() * CELL_SIZE) / 2;
-            maze.drawMaze(batch, (int) offsetX, (int) offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture);
+            maze.drawMaze(batch, (int) offsetX, (int) offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture, doorTexture, keyTexture);
             drawCharacter(offsetX, offsetY);
             updateAndDrawEnemies(offsetX, offsetY);
-            batch.end();
-
             // Handle game logic
             handleInput();
             checkCollisions();
+            // Update and draw bombs
+            drawBomb(offsetX,offsetY,delta);
+            batch.end();
         } else {
             // Draw paused or game over message
             batch.begin();
@@ -119,6 +127,35 @@ public class GameScreen implements Screen {
         game.font2.draw(batch, "Points: " + points, 10, viewport.getWorldHeight() - 30);
         game.font2.draw(batch, "Lives: " + lives, 10, viewport.getWorldHeight() - 50);
         batch.end();
+    }
+
+    private void handleExplosion(Bomb bomb) {
+        int bombX = bomb.getX();
+        int bombY = bomb.getY();
+        int blastRadius = 2; // Example blast radius
+
+        for (int dx = -blastRadius; dx <= blastRadius; dx++) {
+            for (int dy = -blastRadius; dy <= blastRadius; dy++) {
+                int nx = bombX + dx;
+                int ny = bombY + dy;
+
+                if (Math.abs(dx) + Math.abs(dy) <= blastRadius && maze.isFree(nx, ny)) {
+                    // Check if hero is in explosion range
+                    if (character.getX() == nx && character.getY() == ny) {
+                        // Handle hero death
+                    }
+
+                    // Check for enemies in explosion range
+                    for (Enemy enemy : enemies) {
+                        if (enemy.getX() == nx && enemy.getY() == ny) {
+                            // Handle enemy death
+                        }
+                    }
+                } else if (!maze.isFree(nx, ny)) {
+                    break; // Stop blast effect at walls
+                }
+            }
+        }
     }
 
     /**
@@ -255,6 +292,19 @@ public class GameScreen implements Screen {
      */
     private void drawCharacter(float offsetX, float offsetY) {
         batch.draw(characterTexture, offsetX + character.getX() * CELL_SIZE, offsetY + (maze.getHeight() - character.getY() - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    }
+
+    private void drawBomb(float offsetX, float offsetY, float delta){
+        for (Iterator<Bomb> iterator = character.getBombs().iterator(); iterator.hasNext();) {
+            Bomb bomb = iterator.next();
+            bomb.update(delta); // Update bomb timer
+            bomb.draw(batch, bombTexture, offsetX, offsetY ,CELL_SIZE, maze); // Draw bomb
+            if (bomb.hasExploded()) {
+                iterator.remove();
+                handleExplosion(bomb);// Remove exploded bombs from the list
+                // Optionally handle explosion effects here
+            }
+        }
     }
 
     /**
