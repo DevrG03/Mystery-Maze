@@ -26,9 +26,14 @@ public class GameScreen implements Screen {
     private final java.util.List<Enemy> enemies;
     private boolean paused;
     private boolean justPaused;
-    private OrthographicCamera camera;
-    private Viewport viewport;
+    private final OrthographicCamera camera;
+    private final Viewport viewport;
 
+    // HUD variables
+    private float timer;
+    private int points;
+    private int lives;
+    private boolean gameOver;
 
     /**
      * Constructs the game screen with necessary textures, maze, character, and enemies.
@@ -49,7 +54,7 @@ public class GameScreen implements Screen {
 
         // Initialize the camera and viewport with logical size
         camera = new OrthographicCamera();
-        viewport = new FitViewport(21 * CELL_SIZE, 21 * CELL_SIZE, camera); // Fixed logical size based on maze dimensions
+        viewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), camera);
         viewport.apply();
 
         // Center the camera
@@ -57,6 +62,12 @@ public class GameScreen implements Screen {
         camera.update();
 
         placeEnemies(5);
+
+        // Initialize HUD variables
+        timer = 0;
+        points = 0;
+        lives = 3;  // For example, the player starts with 3 lives
+        gameOver = false;
 
         Gdx.app.log("MysteryMaze", "Maze created");
     }
@@ -66,11 +77,13 @@ public class GameScreen implements Screen {
         // Called when this screen becomes the current screen for a Game
     }
 
+    @Override
     public void render(float delta) {
         // Clear screen with black color
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         handlePauseInput();
+        handleRestartInput();
 
         // Update the camera
         camera.update();
@@ -78,22 +91,34 @@ public class GameScreen implements Screen {
         viewport.apply();  // Apply the viewport
 
         // Draw game elements
-        if (!paused) {
+        if (!paused && !gameOver) {
+            timer += delta;
             batch.begin();
-            maze.drawMaze(batch, 0, 0, CELL_SIZE, wallTexture1, wallTexture2, floorTexture);
-            drawCharacter(0, 0);
-            updateAndDrawEnemies(0, 0);
+            // Center the maze drawing
+            float offsetX = (viewport.getWorldWidth() - maze.getWidth() * CELL_SIZE) / 2;
+            float offsetY = (viewport.getWorldHeight() - maze.getHeight() * CELL_SIZE) / 2;
+            maze.drawMaze(batch, (int) offsetX, (int) offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture);
+            drawCharacter(offsetX, offsetY);
+            updateAndDrawEnemies(offsetX, offsetY);
             batch.end();
 
             // Handle game logic
             handleInput();
             checkCollisions();
         } else {
-            // Draw paused message or menu
+            // Draw paused or game over message
             batch.begin();
-            game.font.draw(batch, "Game Paused", (float) Gdx.graphics.getWidth() / 2 - 100, (float) Gdx.graphics.getHeight() / 2);
+            String message = gameOver ? "Game Over" : "Game Paused";
+            game.font.draw(batch, message, (float) Gdx.graphics.getWidth() / 2 - 100, (float) Gdx.graphics.getHeight() / 2);
             batch.end();
         }
+
+        // Draw HUD elements
+        batch.begin();
+        game.font2.draw(batch, "Time: " + formatTime(timer), 10, viewport.getWorldHeight() - 10);
+        game.font2.draw(batch, "Points: " + points, 10, viewport.getWorldHeight() - 30);
+        game.font2.draw(batch, "Lives: " + lives, 10, viewport.getWorldHeight() - 50);
+        batch.end();
     }
 
     /**
@@ -215,22 +240,27 @@ public class GameScreen implements Screen {
      * Action to perform when the character dies.
      */
     private void onCharacterDeath() {
-        character.setPosition(1, 1); // Reset character position
+        lives--;
+        if (lives <= 0) {
+            gameOver = true;
+            paused = true; // Pause the game on game over
+        } else {
+            character.setPosition(1, 1); // Reset character position
+        }
         Gdx.app.log("MysteryMaze", "Hero Died!");
     }
 
     /**
      * Draws the main character on the screen.
      */
-    private void drawCharacter(int offsetX, int offsetY) {
+    private void drawCharacter(float offsetX, float offsetY) {
         batch.draw(characterTexture, offsetX + character.getX() * CELL_SIZE, offsetY + (maze.getHeight() - character.getY() - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
-
 
     /**
      * Updates and draws all enemies on the screen.
      */
-    private void updateAndDrawEnemies(int offsetX, int offsetY) {
+    private void updateAndDrawEnemies(float offsetX, float offsetY) {
         float deltaTime = Gdx.graphics.getDeltaTime();
         for (Enemy enemy : enemies) {
             enemy.update(deltaTime, maze);
@@ -249,6 +279,35 @@ public class GameScreen implements Screen {
         } else if (!Gdx.input.isKeyJustPressed(Input.Keys.P)) {
             justPaused = false;
         }
+    }
+
+    /**
+     * Handles input for restarting the game.
+     */
+    private void handleRestartInput() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.R) && gameOver) {
+            restartGame();
+        }
+    }
+
+    /**
+     * Restarts the game by reinitializing necessary variables.
+     */
+    private void restartGame() {
+        timer = 0;
+        points = 0;
+        lives = 3;
+        gameOver = false;
+        paused = false;
+        character.setPosition(1, 1);
+        enemies.clear();
+        placeEnemies(5);
+    }
+
+    private String formatTime(float timeInSeconds) {
+        int minutes = (int) timeInSeconds / 60;
+        int seconds = (int) timeInSeconds % 60;
+        return String.format("%02d:%02d", minutes, seconds);
     }
 
     @Override
