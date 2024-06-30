@@ -164,7 +164,7 @@ public class Maze {
      * @param y The y coordinate to check
      * @return true if the position is a wall, false otherwise
      */
-    private boolean isWall(int x, int y) {
+    boolean isWall(int x, int y) {
         if (x < 0 || y < 0 || x >= maze.length || y >= maze[0].length) {
             return false; // Out of bounds
         }
@@ -221,5 +221,9 @@ public class Maze {
         }
         // Draw the key
         batch.draw(keyTexture, offsetX + keyX * CELL_SIZE, offsetY + (mazeArray.length - keyY - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    }
+
+    public boolean isWithinBounds(int x, int y) {
+        return x >= 0 && x < width && y >= 0 && y < height;
     }
 }

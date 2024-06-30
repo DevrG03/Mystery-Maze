@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -29,9 +30,8 @@ public class GameScreen implements Screen {
     private boolean justPaused;
     private final OrthographicCamera camera;
     private final Viewport viewport;
-    Texture bombTexture;
+    private final Texture bombTexture, flashTexture;
     List<Bomb> bombs;
-
     // HUD variables
     private float timer;
     private int points;
@@ -53,7 +53,8 @@ public class GameScreen implements Screen {
         floorTexture = new Texture(Gdx.files.internal("V01_Tile3.png"));
         enemyTexture = new Texture(Gdx.files.internal("V01_Enemy.png"));
         characterTexture = new Texture(Gdx.files.internal("V01_MainCharacter.png"));
-        bombTexture = new Texture(Gdx.files.internal("V01_Bomb.png"));
+        bombTexture = new Texture(Gdx.files.internal("Bomb.png"));
+        flashTexture = new Texture(Gdx.files.internal("V01_Bomb_Flash.png"));
         maze = new Maze(21, 21);  // Create a 21x21 maze
         character = new Hero(1, 1);
         enemies = new ArrayList<>();
@@ -298,7 +299,7 @@ public class GameScreen implements Screen {
         for (Iterator<Bomb> iterator = character.getBombs().iterator(); iterator.hasNext();) {
             Bomb bomb = iterator.next();
             bomb.update(delta); // Update bomb timer
-            bomb.draw(batch, bombTexture, offsetX, offsetY ,CELL_SIZE, maze); // Draw bomb
+            bomb.draw(batch, bombTexture, flashTexture,offsetX, offsetY ,CELL_SIZE, maze); // Draw bomb
             if (bomb.hasExploded()) {
                 iterator.remove();
                 handleExplosion(bomb);// Remove exploded bombs from the list
