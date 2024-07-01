@@ -1,7 +1,11 @@
 package com.mysterymaze.game;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
+import java.util.Iterator;
+import java.util.List;
 
 public class Bomb {
     private final int x;
@@ -38,10 +42,10 @@ public class Bomb {
         return exploded;
     }
 
-    public void update(float deltaTime) {
+    public void update(float deltaTime, Hero hero, List<Enemy> enemies, Maze maze) {
         timer += deltaTime;
         if (timer >= TIME_TO_EXPLODE) {
-            explode();
+            explode(hero,enemies, maze);
         }
         if (flashActive) {
             flashTimer += deltaTime;
@@ -51,11 +55,55 @@ public class Bomb {
         }
     }
 
-    private void explode() {
+    private void explode(Hero hero, List<Enemy> enemies, Maze maze) {
         exploded = true;
         flashActive = true;
         flashTimer = 0f;
+
+        Gdx.app.log("Bomb", "Exploding at (" + x + ", " + y + ")");
+
+        // Check if hero is within the flash radius and no wall in between
+        if (isWithinFlashRadius(hero.getX(), hero.getY()) && isClearPath(x, y, hero.getX(), hero.getY(), maze)) {
+            hero.setDead(true);
+            Gdx.app.log("Bomb", "Hero is within range and has no wall in between, setting hero as dead.");
+        } else {
+            Gdx.app.log("Bomb", "Hero is not affected by the bomb.");
+        }
+
+        // Check if enemies are within the flash radius and no wall in between, then remove dead enemies
+        Iterator<Enemy> iterator = enemies.iterator();
+        while (iterator.hasNext()) {
+            Enemy enemy = iterator.next();
+            if (isWithinFlashRadius(enemy.getX(), enemy.getY()) && isClearPath(x, y, enemy.getX(), enemy.getY(), maze)) {
+                enemy.setDead(true);
+                iterator.remove(); // Remove dead enemy from the list
+                Gdx.app.log("Bomb", "Enemy at (" + enemy.getX() + ", " + enemy.getY() + ") is within range and has no wall in between, removing enemy.");
+            } else {
+                Gdx.app.log("Bomb", "Enemy at (" + enemy.getX() + ", " + enemy.getY() + ") is not affected by the bomb.");
+            }
+        }
     }
+
+    private boolean isWithinFlashRadius(int targetX, int targetY) {
+        int dx = Math.abs(targetX - x);
+        int dy = Math.abs(targetY - y);
+        boolean withinRadius = dx <= flashRadius && dy <= flashRadius;
+        Gdx.app.log("Bomb", "Checking flash radius for target at (" + targetX + ", " + targetY + "): " + withinRadius);
+        return withinRadius;
+    }
+
+    private boolean isClearPath(int x1, int y1, int x2, int y2, Maze maze) {
+        List<int[]> points = Bresenham.line(x1, y1, x2, y2);
+        for (int[] point : points) {
+            if (maze.isWall(point[0], point[1])) {
+                Gdx.app.log("Bomb", "Path blocked at (" + point[0] + ", " + point[1] + ")");
+                return false; // There is a wall in the way
+            }
+        }
+        Gdx.app.log("Bomb", "Path is clear from (" + x1 + ", " + y1 + ") to (" + x2 + ", " + y2 + ")");
+        return true; // No walls in the way
+    }
+
 
     public void draw(SpriteBatch batch, Texture bombTexture, Texture flashTexture, float offsetX, float offsetY, int CELL_SIZE, Maze maze) {
         if (!exploded) {

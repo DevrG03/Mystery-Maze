@@ -20,6 +20,7 @@ public class Enemy {
     private List<int[]> currentPath;  // Current path for the enemy's movement
     private int pathStep;  // Index of the current step in the path
     private List<int[]> returnPath;  // Path to return to patrol after chasing
+    private boolean dead;
 
     /**
      * Constructor to initialize an enemy with a patrol path, hero reference, and maze for pathfinding.
@@ -41,6 +42,7 @@ public class Enemy {
         this.currentPath = null;
         this.pathStep = 0;
         this.returnPath = null;
+        this.dead = false;
     }
 
     /**
@@ -189,5 +191,13 @@ public class Enemy {
         }
         x = patrolPath.get(pathIndex)[0];
         y = patrolPath.get(pathIndex)[1];
+    }
+
+    public void setDead(boolean dead) {
+        this.dead = dead;
+    }
+
+    public boolean isDead() {
+        return dead;
     }
 }

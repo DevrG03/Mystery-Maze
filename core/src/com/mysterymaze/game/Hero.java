@@ -14,6 +14,7 @@ public class Hero {
     private int y;
     private float timeSinceLastMove = 0f;
     private List<Bomb> bombs;
+    private boolean dead;
 
     /**
      * Constructs a hero at the specified starting coordinates.
@@ -24,7 +25,8 @@ public class Hero {
     public Hero(int startX, int startY) {
         this.x = startX;
         this.y = startY;
-        this.bombs = new ArrayList<>();;
+        this.bombs = new ArrayList<>();
+        this.dead = false;
     }
 
     /**
@@ -158,5 +160,13 @@ public class Hero {
 
     public Iterable<Bomb> getBombs() {
         return bombs;
+    }
+
+    public void setDead(boolean dead) {
+        this.dead = dead;
+    }
+
+    public boolean isDead() {
+        return dead;
     }
 }

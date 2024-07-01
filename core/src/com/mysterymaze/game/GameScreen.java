@@ -130,35 +130,6 @@ public class GameScreen implements Screen {
         batch.end();
     }
 
-    private void handleExplosion(Bomb bomb) {
-        int bombX = bomb.getX();
-        int bombY = bomb.getY();
-        int blastRadius = 2; // Example blast radius
-
-        for (int dx = -blastRadius; dx <= blastRadius; dx++) {
-            for (int dy = -blastRadius; dy <= blastRadius; dy++) {
-                int nx = bombX + dx;
-                int ny = bombY + dy;
-
-                if (Math.abs(dx) + Math.abs(dy) <= blastRadius && maze.isFree(nx, ny)) {
-                    // Check if hero is in explosion range
-                    if (character.getX() == nx && character.getY() == ny) {
-                        // Handle hero death
-                    }
-
-                    // Check for enemies in explosion range
-                    for (Enemy enemy : enemies) {
-                        if (enemy.getX() == nx && enemy.getY() == ny) {
-                            // Handle enemy death
-                        }
-                    }
-                } else if (!maze.isFree(nx, ny)) {
-                    break; // Stop blast effect at walls
-                }
-            }
-        }
-    }
-
     /**
      * Places a specified number of enemies in valid positions within the maze.
      *
@@ -298,12 +269,15 @@ public class GameScreen implements Screen {
     private void drawBomb(float offsetX, float offsetY, float delta){
         for (Iterator<Bomb> iterator = character.getBombs().iterator(); iterator.hasNext();) {
             Bomb bomb = iterator.next();
-            bomb.update(delta); // Update bomb timer
+            bomb.update(delta, character, enemies ,maze); // Update bomb timer
             bomb.draw(batch, bombTexture, flashTexture,offsetX, offsetY ,CELL_SIZE, maze); // Draw bomb
             if (bomb.hasExploded()) {
                 iterator.remove();
-                handleExplosion(bomb);// Remove exploded bombs from the list
-                // Optionally handle explosion effects here
+                if(character.isDead()){
+                    onCharacterDeath();
+                }
+                // Remove dead enemy from the list
+                enemies.removeIf(Enemy::isDead);
             }
         }
     }
