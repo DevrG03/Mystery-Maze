@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -32,6 +31,8 @@ public class GameScreen implements Screen {
     private final Viewport viewport;
     private final Texture bombTexture, flashTexture;
     List<Bomb> bombs;
+    private boolean gameFinished = false;
+    private float finishTimer = 0f;
     // HUD variables
     private float timer;
     private int points;
@@ -99,7 +100,19 @@ public class GameScreen implements Screen {
         viewport.apply();  // Apply the viewport
 
         // Draw game elements
-        if (!paused && !gameOver) {
+        if (gameFinished) {
+            // Display "Game Finished" message
+            batch.begin();
+            finishTimer += delta;
+            if (finishTimer >= 1f) {
+                // Add logic to finish the game
+                System.out.println("Game Finished!");
+                game.font2.draw(batch, "Game Finished", Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
+                // You can call a method to show the game finished screen or perform any other actions
+            }
+            batch.end();
+        }
+        else if (!paused && !gameOver) {
             timer += delta;
             batch.begin();
             // Center the maze drawing
@@ -119,6 +132,35 @@ public class GameScreen implements Screen {
             batch.begin();
             String message = gameOver ? "Game Over" : "Game Paused";
             game.font.draw(batch, message, (float) Gdx.graphics.getWidth() / 2 - 100, (float) Gdx.graphics.getHeight() / 2);
+            batch.end();
+        }
+
+        if (gameFinished) {
+            // Display "Game Finished" message
+            batch.begin();
+            finishTimer += delta;
+            if (finishTimer >= 1f) {
+                // Add logic to finish the game
+                System.out.println("Game Finished!");
+                game.font2.draw(batch, "Game Finished", Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
+                // You can call a method to show the game finished screen or perform any other actions
+            }
+            batch.end();
+        }
+        else if (!paused && !gameOver) {
+            timer += delta;
+            batch.begin();
+            // Center the maze drawing
+            float offsetX = (viewport.getWorldWidth() - maze.getWidth() * CELL_SIZE) / 2;
+            float offsetY = (viewport.getWorldHeight() - maze.getHeight() * CELL_SIZE) / 2;
+            maze.drawMaze(batch, (int) offsetX, (int) offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture, doorTexture, keyTexture);
+            drawCharacter(offsetX, offsetY);
+            updateAndDrawEnemies(offsetX, offsetY);
+            // Handle game logic
+            handleInput();
+            checkCollisions();
+            // Update and draw bombs
+            drawBomb(offsetX,offsetY,delta);
             batch.end();
         }
 
@@ -227,7 +269,7 @@ public class GameScreen implements Screen {
      */
     private void handleInput() {
         boolean moved = false;
-        moved = character.handleInput(maze, moved);
+        moved = character.handleInput(maze, moved, this);
         if (moved) {
             checkCollisions();
         }
@@ -335,6 +377,11 @@ public class GameScreen implements Screen {
         return String.format("%02d:%02d", minutes, seconds);
     }
 
+    // Method to call when the game is finished
+    public void finishGame() {
+        gameFinished = true;
+    }
+
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
@@ -370,3 +417,4 @@ public class GameScreen implements Screen {
         enemyTexture.dispose();
     }
 }
+

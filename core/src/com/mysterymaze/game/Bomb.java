@@ -17,7 +17,7 @@ public class Bomb {
     private final int flashRadius;
 
     private static final float TIME_TO_EXPLODE = 3f; // 3 seconds until explosion
-    private static final float FLASH_DURATION = 0.4f; // 0.2 seconds flash duration
+    private static final float FLASH_DURATION = 0.4f; // 0.4 seconds flash duration
     private static final int DEFAULT_FLASH_RADIUS = 2; // Default flash radius in cells
 
     public Bomb(int x, int y) {
@@ -45,7 +45,7 @@ public class Bomb {
     public void update(float deltaTime, Hero hero, List<Enemy> enemies, Maze maze) {
         timer += deltaTime;
         if (timer >= TIME_TO_EXPLODE) {
-            explode(hero,enemies, maze);
+            explode(hero, enemies, maze);
         }
         if (flashActive) {
             flashTimer += deltaTime;
@@ -103,7 +103,6 @@ public class Bomb {
         Gdx.app.log("Bomb", "Path is clear from (" + x1 + ", " + y1 + ") to (" + x2 + ", " + y2 + ")");
         return true; // No walls in the way
     }
-
 
     public void draw(SpriteBatch batch, Texture bombTexture, Texture flashTexture, float offsetX, float offsetY, int CELL_SIZE, Maze maze) {
         if (!exploded) {

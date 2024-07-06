@@ -10,6 +10,13 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 /**
  * Represents the main menu screen of the game.
@@ -97,12 +104,13 @@ public class MainMenuScreen implements Screen {
                 Gdx.app.exit(); // Exit the game
             }
         }
+
+
     }
 
     @Override
     public void resize(int width, int height) {
         // Adjust screen size
-        batch.getProjectionMatrix().setToOrtho2D(0, 0, width, height);
     }
 
     @Override

@@ -18,6 +18,8 @@ public class Maze {
     private final Random random = new Random();
     private int doorX, doorY;
     private int keyX, keyY;
+    private boolean doorOpen = false;
+    private boolean keyPickedUp = false;
 
     /**
      * Constructs a maze with the specified dimensions and initializes it with walls.
@@ -107,6 +109,10 @@ public class Maze {
      */
     public boolean hasFloorBelow(int x, int y) {
         return ((y + 1 < height - 1) && (maze[x][y + 1] == 1)) || y == height - 1;
+    }
+
+    public void removeKey() {
+        keyPickedUp = true;
     }
 
     /**
@@ -206,7 +212,7 @@ public class Maze {
         for (int y = 0; y < mazeArray.length; y++) {
             for (int x = 0; x < mazeArray[y].length; x++) {
                 int y1 = offsetY + (mazeArray.length - y - 1) * CELL_SIZE, x1 = offsetX + x * CELL_SIZE;
-                if (mazeArray[x][y] == 0) {  // Draw wall
+                if (mazeArray[x][y] == 0) {
                     if (x == doorX && y == doorY) {
                         batch.draw(doorTexture, x1, y1, CELL_SIZE, CELL_SIZE);
                     } else if (this.hasFloorBelow(x, y)) {
@@ -214,16 +220,45 @@ public class Maze {
                     } else {
                         batch.draw(wallTexture1, x1, y1, CELL_SIZE, CELL_SIZE);
                     }
-                } else {  // Draw floor (path)
+                } else {
                     batch.draw(floorTexture, x1, y1, CELL_SIZE, CELL_SIZE);
                 }
             }
         }
-        // Draw the key
-        batch.draw(keyTexture, offsetX + keyX * CELL_SIZE, offsetY + (mazeArray.length - keyY - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        if (!keyPickedUp) {
+            batch.draw(keyTexture, offsetX + keyX * CELL_SIZE, offsetY + (mazeArray.length - keyY - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        }
     }
 
     public boolean isWithinBounds(int x, int y) {
         return x >= 0 && x < width && y >= 0 && y < height;
+    }
+
+    public int getKeyX() {
+        return keyX;
+    }
+
+    public int getKeyY() {
+        return keyY;
+    }
+
+    public int getDoorX() {
+        return doorX;
+    }
+
+    public int getDoorY() {
+        return doorY;
+    }
+
+    // Add a method to open the door
+    public void openDoor() {
+        if (!doorOpen) {
+            doorOpen = true;
+            maze[doorX][doorY] = 1; // Convert door to path
+        }
+    }
+
+    public boolean isAdjacentToDoor(int x, int y) {
+        return (Math.abs(x - doorX) == 1 && y == doorY) || (Math.abs(y - doorY) == 1 && x == doorX);
     }
 }

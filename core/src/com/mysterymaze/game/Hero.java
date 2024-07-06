@@ -15,6 +15,7 @@ public class Hero {
     private float timeSinceLastMove = 0f;
     private List<Bomb> bombs;
     private boolean dead;
+    private boolean hasKey = false;
 
     /**
      * Constructs a hero at the specified starting coordinates.
@@ -82,9 +83,9 @@ public class Hero {
      * @param moved Indicates whether the hero has moved
      * @return True if the hero has moved, false otherwise
      */
-    public boolean handleInput(Maze maze, boolean moved) {
+    public boolean handleInput(Maze maze, boolean moved, GameScreen gameScreen) {
         this.timeSinceLastMove += Gdx.graphics.getDeltaTime();
-        float movementCooldown = 0.18f;
+        float movementCooldown = 0.2f;
         if (this.timeSinceLastMove >= movementCooldown) {
             // Handling movement based on key presses
             if (Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.W)) {
@@ -124,6 +125,9 @@ public class Hero {
                 this.timeSinceLastMove = 0f; // Optional: reset cooldown to prevent immediate re-dropping
                 moved = true; // Indicate movement occurred (dropping bomb is considered an action)
             }
+        }
+        if (moved){
+            checkForKeyAndDoor(maze, gameScreen);
         }
         return moved; // Return whether movement occurred
     }
@@ -168,5 +172,20 @@ public class Hero {
 
     public boolean isDead() {
         return dead;
+    }
+
+    public void checkForKeyAndDoor(Maze maze, GameScreen gameScreen) {
+        // Check if the hero is at the key position
+        if (getX() == maze.getKeyX() && getY() == maze.getKeyY() && !hasKey) {
+            hasKey = true; // Hero picks up the key
+            Gdx.app.log("MysteryMaze", "Key picked up!");
+            maze.removeKey();
+        }
+
+        if (hasKey && maze.isAdjacentToDoor(getX(), getY())) {
+            maze.openDoor();
+            Gdx.app.log("MysteryMaze", "Door opened! Game Finished");
+            gameScreen.finishGame(); // Add this line
+        }
     }
 }
