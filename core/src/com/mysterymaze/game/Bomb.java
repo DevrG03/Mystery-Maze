@@ -15,6 +15,7 @@ public class Bomb {
     private boolean flashActive;
     private float flashTimer;
     private final int flashRadius;
+    private int bombScore = 0;
 
     private static final float TIME_TO_EXPLODE = 3f; // 3 seconds until explosion
     private static final float FLASH_DURATION = 0.4f; // 0.4 seconds flash duration
@@ -42,10 +43,11 @@ public class Bomb {
         return exploded;
     }
 
-    public void update(float deltaTime, Hero hero, List<Enemy> enemies, Maze maze) {
+    public int update(float deltaTime, Hero hero, List<Enemy> enemies, Maze maze) {
+        int score = 0;
         timer += deltaTime;
         if (timer >= TIME_TO_EXPLODE) {
-            explode(hero, enemies, maze);
+            score = explode(hero, enemies, maze);
         }
         if (flashActive) {
             flashTimer += deltaTime;
@@ -53,9 +55,10 @@ public class Bomb {
                 flashActive = false;
             }
         }
+        return score;
     }
 
-    private void explode(Hero hero, List<Enemy> enemies, Maze maze) {
+    private int explode(Hero hero, List<Enemy> enemies, Maze maze) {
         exploded = true;
         flashActive = true;
         flashTimer = 0f;
@@ -76,12 +79,14 @@ public class Bomb {
             Enemy enemy = iterator.next();
             if (isWithinFlashRadius(enemy.getX(), enemy.getY()) && isClearPath(x, y, enemy.getX(), enemy.getY(), maze)) {
                 enemy.setDead(true);
+                bombScore += 5;
                 iterator.remove(); // Remove dead enemy from the list
                 Gdx.app.log("Bomb", "Enemy at (" + enemy.getX() + ", " + enemy.getY() + ") is within range and has no wall in between, removing enemy.");
             } else {
                 Gdx.app.log("Bomb", "Enemy at (" + enemy.getX() + ", " + enemy.getY() + ") is not affected by the bomb.");
             }
         }
+        return bombScore;
     }
 
     private boolean isWithinFlashRadius(int targetX, int targetY) {
@@ -148,5 +153,9 @@ public class Bomb {
                 }
             }
         }
+    }
+
+    public int getBombScore(){
+        return bombScore;
     }
 }

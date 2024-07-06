@@ -71,7 +71,7 @@ public class Enemy {
      */
     public void update(float deltaTime, Maze maze) {
         timeSinceLastMove += deltaTime;
-        float movementCooldown = 0.5f;  // Adjust this value to control the speed of enemy movement
+        float movementCooldown = 0.9f;  // Adjust this value to control the speed of enemy movement
 
         // Check if enough time has passed to allow movement
         if (timeSinceLastMove >= movementCooldown) {

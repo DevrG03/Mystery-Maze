@@ -29,10 +29,11 @@ public class GameScreen implements Screen {
     private boolean justPaused;
     private final OrthographicCamera camera;
     private final Viewport viewport;
-    private final Texture bombTexture, flashTexture;
+    private final Texture bombTexture, flashTexture, coinTexture, thornTexture;
     List<Bomb> bombs;
     private boolean gameFinished = false;
     private float finishTimer = 0f;
+    private  int bombScore = 0;
     // HUD variables
     private float timer;
     private int points;
@@ -56,6 +57,8 @@ public class GameScreen implements Screen {
         characterTexture = new Texture(Gdx.files.internal("V01_MainCharacter.png"));
         bombTexture = new Texture(Gdx.files.internal("Bomb.png"));
         flashTexture = new Texture(Gdx.files.internal("V01_Bomb_Flash.png"));
+        coinTexture = new Texture(Gdx.files.internal("V01_Coin.png"));
+        thornTexture = new Texture(Gdx.files.internal("V01_Obstacle.png"));
         maze = new Maze(21, 21);  // Create a 21x21 maze
         character = new Hero(1, 1);
         enemies = new ArrayList<>();
@@ -118,7 +121,7 @@ public class GameScreen implements Screen {
             // Center the maze drawing
             float offsetX = (viewport.getWorldWidth() - maze.getWidth() * CELL_SIZE) / 2;
             float offsetY = (viewport.getWorldHeight() - maze.getHeight() * CELL_SIZE) / 2;
-            maze.drawMaze(batch, (int) offsetX, (int) offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture, doorTexture, keyTexture);
+            maze.drawMaze(batch, (int) offsetX, (int) offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture, doorTexture, keyTexture, coinTexture, thornTexture);
             drawCharacter(offsetX, offsetY);
             updateAndDrawEnemies(offsetX, offsetY);
             // Handle game logic
@@ -135,39 +138,12 @@ public class GameScreen implements Screen {
             batch.end();
         }
 
-        if (gameFinished) {
-            // Display "Game Finished" message
-            batch.begin();
-            finishTimer += delta;
-            if (finishTimer >= 1f) {
-                // Add logic to finish the game
-                System.out.println("Game Finished!");
-                game.font2.draw(batch, "Game Finished", Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
-                // You can call a method to show the game finished screen or perform any other actions
-            }
-            batch.end();
-        }
-        else if (!paused && !gameOver) {
-            timer += delta;
-            batch.begin();
-            // Center the maze drawing
-            float offsetX = (viewport.getWorldWidth() - maze.getWidth() * CELL_SIZE) / 2;
-            float offsetY = (viewport.getWorldHeight() - maze.getHeight() * CELL_SIZE) / 2;
-            maze.drawMaze(batch, (int) offsetX, (int) offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture, doorTexture, keyTexture);
-            drawCharacter(offsetX, offsetY);
-            updateAndDrawEnemies(offsetX, offsetY);
-            // Handle game logic
-            handleInput();
-            checkCollisions();
-            // Update and draw bombs
-            drawBomb(offsetX,offsetY,delta);
-            batch.end();
-        }
+
 
         // Draw HUD elements
         batch.begin();
         game.font2.draw(batch, "Time: " + formatTime(timer), 10, viewport.getWorldHeight() - 10);
-        game.font2.draw(batch, "Points: " + points, 10, viewport.getWorldHeight() - 30);
+        game.font2.draw(batch, "Points: " + character.getScore() + bombScore, 10, viewport.getWorldHeight() - 30);
         game.font2.draw(batch, "Lives: " + lives, 10, viewport.getWorldHeight() - 50);
         batch.end();
     }
@@ -308,10 +284,11 @@ public class GameScreen implements Screen {
         batch.draw(characterTexture, offsetX + character.getX() * CELL_SIZE, offsetY + (maze.getHeight() - character.getY() - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
 
-    private void drawBomb(float offsetX, float offsetY, float delta){
+    private int drawBomb(float offsetX, float offsetY, float delta){
+        int score = 0;
         for (Iterator<Bomb> iterator = character.getBombs().iterator(); iterator.hasNext();) {
             Bomb bomb = iterator.next();
-            bomb.update(delta, character, enemies ,maze); // Update bomb timer
+            bombScore += bomb.update(delta, character, enemies, maze); // Update bomb timer
             bomb.draw(batch, bombTexture, flashTexture,offsetX, offsetY ,CELL_SIZE, maze); // Draw bomb
             if (bomb.hasExploded()) {
                 iterator.remove();
@@ -322,6 +299,7 @@ public class GameScreen implements Screen {
                 enemies.removeIf(Enemy::isDead);
             }
         }
+        return score;
     }
 
     /**
@@ -375,6 +353,14 @@ public class GameScreen implements Screen {
         int minutes = (int) timeInSeconds / 60;
         int seconds = (int) timeInSeconds % 60;
         return String.format("%02d:%02d", minutes, seconds);
+    }
+
+    private int getBombScore(){
+        int bombScore = 0;
+        for (Bomb bomb : bombs){
+            bombScore += bomb.getBombScore();
+        }
+        return  bombScore;
     }
 
     // Method to call when the game is finished

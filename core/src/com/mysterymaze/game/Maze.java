@@ -3,9 +3,7 @@ package com.mysterymaze.game;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Represents a maze generated using Depth-First Search (DFS) algorithm.
@@ -20,6 +18,8 @@ public class Maze {
     private int keyX, keyY;
     private boolean doorOpen = false;
     private boolean keyPickedUp = false;
+    final List<int[]> coins = new ArrayList<>();
+    private final List<int[]> thorns = new ArrayList<>();
 
     /**
      * Constructs a maze with the specified dimensions and initializes it with walls.
@@ -37,6 +37,7 @@ public class Maze {
         }
         generateMaze(1, 1); // Generate the maze starting from (1, 1)
         placeDoorAndKey();
+        placeCoinsAndThorns();
     }
 
     /**
@@ -207,7 +208,7 @@ public class Maze {
      */
     public void drawMaze(SpriteBatch batch, int offsetX, int offsetY, int CELL_SIZE,
                          Texture wallTexture1, Texture wallTexture2, Texture floorTexture,
-                         Texture doorTexture, Texture keyTexture) {
+                         Texture doorTexture, Texture keyTexture, Texture coinTexture, Texture thornTexture) {
         int[][] mazeArray = this.getMaze();
         for (int y = 0; y < mazeArray.length; y++) {
             for (int x = 0; x < mazeArray[y].length; x++) {
@@ -215,6 +216,8 @@ public class Maze {
                 if (mazeArray[x][y] == 0) {
                     if (x == doorX && y == doorY) {
                         batch.draw(doorTexture, x1, y1, CELL_SIZE, CELL_SIZE);
+                    } else if (isThorn(x, y)) {
+                        batch.draw(thornTexture, x1, y1, CELL_SIZE, CELL_SIZE);
                     } else if (this.hasFloorBelow(x, y)) {
                         batch.draw(wallTexture2, x1, y1, CELL_SIZE, CELL_SIZE);
                     } else {
@@ -225,9 +228,21 @@ public class Maze {
                 }
             }
         }
+        for (int[] coin : coins) {
+            batch.draw(coinTexture, offsetX + coin[0] * CELL_SIZE, offsetY + (mazeArray.length - coin[1] - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        }
         if (!keyPickedUp) {
             batch.draw(keyTexture, offsetX + keyX * CELL_SIZE, offsetY + (mazeArray.length - keyY - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
         }
+    }
+
+    private boolean isThorn(int x, int y) {
+        for (int[] thorn : thorns) {
+            if (thorn[0] == x && thorn[1] == y) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isWithinBounds(int x, int y) {
@@ -260,5 +275,31 @@ public class Maze {
 
     public boolean isAdjacentToDoor(int x, int y) {
         return (Math.abs(x - doorX) == 1 && y == doorY) || (Math.abs(y - doorY) == 1 && x == doorX);
+    }
+
+    private void placeCoinsAndThorns() {
+        // Place coins on random floor tiles
+        for (int i = 0; i < 5; i++) { // Adjust the number of coins as needed
+            int coinX, coinY;
+            do {
+                coinX = random.nextInt(width);
+                coinY = random.nextInt(height);
+            } while (!isFree(coinX, coinY) || isTooCloseToSpawn(coinX, coinY, 1, 1));
+            coins.add(new int[]{coinX, coinY});
+        }
+
+        // Place thorns on random wall tiles
+        for (int i = 0; i < 3; i++) { // Adjust the number of thorns as needed
+            int thornX, thornY;
+            do {
+                thornX = random.nextInt(width);
+                thornY = random.nextInt(height);
+            } while (!isWall(thornX, thornY) || isBoundary(thornX, thornY));
+            thorns.add(new int[]{thornX, thornY});
+        }
+    }
+
+    private boolean isBoundary(int x, int y) {
+        return x == 0 || y == 0 || x == width - 1 || y == height - 1;
     }
 }

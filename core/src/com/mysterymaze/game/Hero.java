@@ -16,6 +16,7 @@ public class Hero {
     private List<Bomb> bombs;
     private boolean dead;
     private boolean hasKey = false;
+    private int score = 0;
 
     /**
      * Constructs a hero at the specified starting coordinates.
@@ -128,6 +129,7 @@ public class Hero {
         }
         if (moved){
             checkForKeyAndDoor(maze, gameScreen);
+            collectCoin(x,y,maze);
         }
         return moved; // Return whether movement occurred
     }
@@ -187,5 +189,19 @@ public class Hero {
             Gdx.app.log("MysteryMaze", "Door opened! Game Finished");
             gameScreen.finishGame(); // Add this line
         }
+    }
+
+
+    public void collectCoin(int x, int y, Maze maze) {
+        int a = maze.coins.size();
+        maze.coins.removeIf(coin -> coin[0] == x && coin[1] == y);
+        int b = maze.coins.size();
+        if(a>b){
+            score += 1;
+  ;      }
+    }
+
+    public int getScore() {
+        return score;
     }
 }
