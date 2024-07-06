@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
 
 public class Bomb {
     private final int x;
@@ -65,7 +66,11 @@ public class Bomb {
 
         Gdx.app.log("Bomb", "Exploding at (" + x + ", " + y + ")");
 
+        // Log bomb position and flash radius
+        Gdx.app.log("Bomb", "Bomb position: (" + x + ", " + y + "), Flash radius: " + DEFAULT_FLASH_RADIUS);
+
         // Check if hero is within the flash radius and no wall in between
+        Gdx.app.log("Bomb", "Checking hero at position: (" + hero.getX() + ", " + hero.getY() + ")");
         if (isWithinFlashRadius(hero.getX(), hero.getY()) && isClearPath(x, y, hero.getX(), hero.getY(), maze)) {
             hero.setDead(true);
             Gdx.app.log("Bomb", "Hero is within range and has no wall in between, setting hero as dead.");
@@ -77,6 +82,7 @@ public class Bomb {
         Iterator<Enemy> iterator = enemies.iterator();
         while (iterator.hasNext()) {
             Enemy enemy = iterator.next();
+            Gdx.app.log("Bomb", "Checking enemy at position: (" + enemy.getX() + ", " + enemy.getY() + ")");
             if (isWithinFlashRadius(enemy.getX(), enemy.getY()) && isClearPath(x, y, enemy.getX(), enemy.getY(), maze)) {
                 enemy.setDead(true);
                 bombScore += 5;
@@ -86,6 +92,18 @@ public class Bomb {
                 Gdx.app.log("Bomb", "Enemy at (" + enemy.getX() + ", " + enemy.getY() + ") is not affected by the bomb.");
             }
         }
+
+        // Check if thorns are within the flash radius and destroy them
+        for (int[] thorn : maze.getThorns()) {
+            Gdx.app.log("Bomb", "Checking thorn at position: (" + thorn[0] + ", " + thorn[1] + ")");
+            if (isWithinFlashRadius(thorn[0], thorn[1]) && isClearPath(x, y, thorn[0], thorn[1], maze)) {
+                maze.removeThorn(thorn[0], thorn[1]);
+                Gdx.app.log("Bomb", "Thorn at (" + thorn[0] + ", " + thorn[1] + ") is within range and has no wall in between, destroying thorn.");
+            } else {
+                Gdx.app.log("Bomb", "Thorn at (" + thorn[0] + ", " + thorn[1] + ") is not affected by the bomb.");
+            }
+        }
+
         return bombScore;
     }
 

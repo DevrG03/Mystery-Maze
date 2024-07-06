@@ -19,7 +19,10 @@ public class Maze {
     private boolean doorOpen = false;
     private boolean keyPickedUp = false;
     final List<int[]> coins = new ArrayList<>();
-    private final List<int[]> thorns = new ArrayList<>();
+    public final List<int[]> thorns = new ArrayList<>();
+    private int chestX, chestY;
+    private boolean chestOpen = false;
+    private int chestScore = 0;
 
     /**
      * Constructs a maze with the specified dimensions and initializes it with walls.
@@ -131,6 +134,10 @@ public class Maze {
         }
     }
 
+    public int getChestScore(){
+        return chestScore;
+    }
+
     /**
      * Checks if a position is free (not a wall).
      *
@@ -151,11 +158,11 @@ public class Maze {
     private void placeDoorAndKey() {
         int spawnX = 1, spawnY = 1; // Assuming the spawn point is (1, 1)
 
-        // Place the door on a wall piece
+        // Place the door on a wall piece that is a boundary and has at least one floor around it
         do {
             doorX = random.nextInt(width);
             doorY = random.nextInt(height);
-        } while (!isWall(doorX, doorY) || isTooCloseToSpawn(doorX, doorY, spawnX, spawnY));
+        } while (!isValidDoorPosition(doorX, doorY) || isTooCloseToSpawn(doorX, doorY, spawnX, spawnY));
 
         // Place the key on a floor tile
         do {
@@ -208,7 +215,8 @@ public class Maze {
      */
     public void drawMaze(SpriteBatch batch, int offsetX, int offsetY, int CELL_SIZE,
                          Texture wallTexture1, Texture wallTexture2, Texture floorTexture,
-                         Texture doorTexture, Texture keyTexture, Texture coinTexture, Texture thornTexture) {
+                         Texture doorTexture, Texture keyTexture, Texture coinTexture,
+                         Texture thornTexture, Texture closedChestTexture, Texture openChestTexture) {
         int[][] mazeArray = this.getMaze();
         for (int y = 0; y < mazeArray.length; y++) {
             for (int x = 0; x < mazeArray[y].length; x++) {
@@ -216,13 +224,13 @@ public class Maze {
                 if (mazeArray[x][y] == 0) {
                     if (x == doorX && y == doorY) {
                         batch.draw(doorTexture, x1, y1, CELL_SIZE, CELL_SIZE);
-                    } else if (isThorn(x, y)) {
-                        batch.draw(thornTexture, x1, y1, CELL_SIZE, CELL_SIZE);
                     } else if (this.hasFloorBelow(x, y)) {
                         batch.draw(wallTexture2, x1, y1, CELL_SIZE, CELL_SIZE);
                     } else {
                         batch.draw(wallTexture1, x1, y1, CELL_SIZE, CELL_SIZE);
                     }
+                } else if (mazeArray[x][y] == 2) {
+                    batch.draw(thornTexture, x1, y1, CELL_SIZE, CELL_SIZE);
                 } else {
                     batch.draw(floorTexture, x1, y1, CELL_SIZE, CELL_SIZE);
                 }
@@ -234,15 +242,28 @@ public class Maze {
         if (!keyPickedUp) {
             batch.draw(keyTexture, offsetX + keyX * CELL_SIZE, offsetY + (mazeArray.length - keyY - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
         }
+        if (chestOpen) {
+            batch.draw(openChestTexture, offsetX + chestX * CELL_SIZE, offsetY + (mazeArray.length - chestY - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        } else {
+            batch.draw(closedChestTexture, offsetX + chestX * CELL_SIZE, offsetY + (mazeArray.length - chestY - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        }
     }
 
-    private boolean isThorn(int x, int y) {
-        for (int[] thorn : thorns) {
-            if (thorn[0] == x && thorn[1] == y) {
-                return true;
-            }
-        }
-        return false;
+    public void openChest() {
+        chestOpen = true;
+        chestScore = 50;
+    }
+
+    public boolean isChestOpen() {
+        return chestOpen;
+    }
+
+    public int getChestX() {
+        return chestX;
+    }
+
+    public int getChestY() {
+        return chestY;
     }
 
     public boolean isWithinBounds(int x, int y) {
@@ -274,32 +295,99 @@ public class Maze {
     }
 
     public boolean isAdjacentToDoor(int x, int y) {
-        return (Math.abs(x - doorX) == 1 && y == doorY) || (Math.abs(y - doorY) == 1 && x == doorX);
+        return (x == doorX && y == doorY);
     }
 
     private void placeCoinsAndThorns() {
         // Place coins on random floor tiles
-        for (int i = 0; i < 5; i++) { // Adjust the number of coins as needed
+        for (int i = 0; i < 25; i++) { // Adjust the number of coins as needed
             int coinX, coinY;
             do {
                 coinX = random.nextInt(width);
                 coinY = random.nextInt(height);
-            } while (!isFree(coinX, coinY) || isTooCloseToSpawn(coinX, coinY, 1, 1));
+            } while (!isFree(coinX, coinY) || isTooCloseToSpawn(coinX, coinY, 1, 1) || (coinX == keyX && coinY == keyY));
             coins.add(new int[]{coinX, coinY});
         }
 
         // Place thorns on random wall tiles
-        for (int i = 0; i < 3; i++) { // Adjust the number of thorns as needed
+        for (int i = 0; i < 5; i++) { // Adjust the number of thorns as needed
             int thornX, thornY;
             do {
                 thornX = random.nextInt(width);
                 thornY = random.nextInt(height);
-            } while (!isWall(thornX, thornY) || isBoundary(thornX, thornY));
+            } while (!isValidThornPosition(thornX, thornY));
+            maze[thornX][thornY] = 2;
             thorns.add(new int[]{thornX, thornY});
         }
+
+        // Place the treasure chest on a floor tile
+        do {
+            chestX = random.nextInt(width);
+            chestY = random.nextInt(height);
+        } while (!isFree(chestX, chestY) || isTooCloseToSpawn(chestX, chestY, 1, 1) || (chestX == keyX && chestY == keyY));
     }
+
+    private boolean isValidThornPosition(int x, int y) {
+        return isWall(x, y) && !isBoundary(x, y) && !isCorner(x, y) && !isEndPointOfWallLine(x, y);
+    }
+
+    private boolean isCorner(int x, int y) {
+        // Check if the position is a corner (surrounded by walls on two adjacent sides)
+        return (isWall(x - 1, y) && isWall(x, y - 1)) ||
+                (isWall(x + 1, y) && isWall(x, y - 1)) ||
+                (isWall(x - 1, y) && isWall(x, y + 1)) ||
+                (isWall(x + 1, y) && isWall(x, y + 1));
+    }
+
+    private boolean isEndPointOfWallLine(int x, int y) {
+        // Check if the position is an endpoint of a horizontal or vertical wall line
+        int wallCount = 0;
+        if (isWall(x - 1, y)) wallCount++;
+        if (isWall(x + 1, y)) wallCount++;
+        if (isWall(x, y - 1)) wallCount++;
+        if (isWall(x, y + 1)) wallCount++;
+        return wallCount == 1;
+    }
+
 
     private boolean isBoundary(int x, int y) {
         return x == 0 || y == 0 || x == width - 1 || y == height - 1;
+    }
+
+    private boolean isValidDoorPosition(int x, int y) {
+        // Check if the position is a boundary
+        if (!isBoundary(x, y)) {
+            return false;
+        }
+
+        // Check if the position is a wall and has at least one floor tile around it
+        return isWall(x, y) && hasAdjacentFloor(x, y);
+    }
+
+    private boolean hasAdjacentFloor(int x, int y) {
+        int[][] directions = {
+                {0, 1}, {1, 0}, {0, -1}, {-1, 0}
+        };
+        for (int[] dir : directions) {
+            int newX = x + dir[0];
+            int newY = y + dir[1];
+            if (isWithinBounds(newX, newY) && isFree(newX, newY)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<int[]> getThorns() {
+        return thorns;
+    }
+
+    public void removeThorn(int x, int y) {
+        for (int[] thorn : thorns) {
+            if (thorn[0] == x && thorn[1] == y) {
+                maze[x][y] = 1; // Open a path where the thorn was destroyed
+                break;
+            }
+        }
     }
 }

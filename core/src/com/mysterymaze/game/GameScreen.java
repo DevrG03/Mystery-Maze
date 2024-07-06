@@ -29,7 +29,7 @@ public class GameScreen implements Screen {
     private boolean justPaused;
     private final OrthographicCamera camera;
     private final Viewport viewport;
-    private final Texture bombTexture, flashTexture, coinTexture, thornTexture;
+    private final Texture bombTexture, flashTexture, coinTexture, thornTexture, closedChestTexture, openedChestTexture;
     List<Bomb> bombs;
     private boolean gameFinished = false;
     private float finishTimer = 0f;
@@ -59,6 +59,8 @@ public class GameScreen implements Screen {
         flashTexture = new Texture(Gdx.files.internal("V01_Bomb_Flash.png"));
         coinTexture = new Texture(Gdx.files.internal("V01_Coin.png"));
         thornTexture = new Texture(Gdx.files.internal("V01_Obstacle.png"));
+        closedChestTexture = new Texture(Gdx.files.internal("V01_Chest.png"));
+        openedChestTexture = new Texture(Gdx.files.internal("V01_Chest_Open.png"));
         maze = new Maze(21, 21);  // Create a 21x21 maze
         character = new Hero(1, 1);
         enemies = new ArrayList<>();
@@ -106,13 +108,7 @@ public class GameScreen implements Screen {
         if (gameFinished) {
             // Display "Game Finished" message
             batch.begin();
-            finishTimer += delta;
-            if (finishTimer >= 1f) {
-                // Add logic to finish the game
-                System.out.println("Game Finished!");
-                game.font2.draw(batch, "Game Finished", Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
-                // You can call a method to show the game finished screen or perform any other actions
-            }
+            game.font.draw(batch, "Game Finished \nYour Score: " + (character.getScore() + bombScore + maze.getChestScore() + lives) , (float) Gdx.graphics.getWidth() / 2 - 115, (float) Gdx.graphics.getHeight() / 2 + 10);
             batch.end();
         }
         else if (!paused && !gameOver) {
@@ -121,7 +117,7 @@ public class GameScreen implements Screen {
             // Center the maze drawing
             float offsetX = (viewport.getWorldWidth() - maze.getWidth() * CELL_SIZE) / 2;
             float offsetY = (viewport.getWorldHeight() - maze.getHeight() * CELL_SIZE) / 2;
-            maze.drawMaze(batch, (int) offsetX, (int) offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture, doorTexture, keyTexture, coinTexture, thornTexture);
+            maze.drawMaze(batch, (int) offsetX, (int) offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture, doorTexture, keyTexture, coinTexture, thornTexture, closedChestTexture, openedChestTexture);
             drawCharacter(offsetX, offsetY);
             updateAndDrawEnemies(offsetX, offsetY);
             // Handle game logic
@@ -134,7 +130,7 @@ public class GameScreen implements Screen {
             // Draw paused or game over message
             batch.begin();
             String message = gameOver ? "Game Over" : "Game Paused";
-            game.font.draw(batch, message, (float) Gdx.graphics.getWidth() / 2 - 100, (float) Gdx.graphics.getHeight() / 2);
+            game.font.draw(batch, message, (float) Gdx.graphics.getWidth() / 2 - 115, (float) Gdx.graphics.getHeight() / 2);
             batch.end();
         }
 
@@ -143,8 +139,9 @@ public class GameScreen implements Screen {
         // Draw HUD elements
         batch.begin();
         game.font2.draw(batch, "Time: " + formatTime(timer), 10, viewport.getWorldHeight() - 10);
-        game.font2.draw(batch, "Points: " + character.getScore() + bombScore, 10, viewport.getWorldHeight() - 30);
+        game.font2.draw(batch, "Points: " + (character.getScore() + bombScore + maze.getChestScore()), 10, viewport.getWorldHeight() - 30);
         game.font2.draw(batch, "Lives: " + lives, 10, viewport.getWorldHeight() - 50);
+        game.font2.draw(batch, "Controls:\nWASD\nArrow Keys\nBomb:B\nPlay\\Pause:P\nRestart:R", 10, viewport.getWorldHeight() - 70);
         batch.end();
     }
 
@@ -246,6 +243,9 @@ public class GameScreen implements Screen {
     private void handleInput() {
         boolean moved = false;
         moved = character.handleInput(maze, moved, this);
+        if (Gdx.input.isKeyPressed(Input.Keys.R)){
+            restartGame();
+        }
         if (moved) {
             checkCollisions();
         }

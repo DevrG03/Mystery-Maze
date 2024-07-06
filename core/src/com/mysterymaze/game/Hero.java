@@ -130,6 +130,9 @@ public class Hero {
         if (moved){
             checkForKeyAndDoor(maze, gameScreen);
             collectCoin(x,y,maze);
+            if (x == maze.getChestX() && y == maze.getChestY()) {
+                maze.openChest();
+            }
         }
         return moved; // Return whether movement occurred
     }
@@ -184,10 +187,13 @@ public class Hero {
             maze.removeKey();
         }
 
-        if (hasKey && maze.isAdjacentToDoor(getX(), getY())) {
+        if (hasKey) {
             maze.openDoor();
-            Gdx.app.log("MysteryMaze", "Door opened! Game Finished");
-            gameScreen.finishGame(); // Add this line
+            Gdx.app.log("MysteryMaze", "Door opened!");
+            if (maze.isAdjacentToDoor(getX(), getY())){
+                gameScreen.finishGame(); // Add this line
+                Gdx.app.log("MysteryMaze", "Game Finished");
+            }
         }
     }
 
