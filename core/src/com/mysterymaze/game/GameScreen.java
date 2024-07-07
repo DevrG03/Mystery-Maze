@@ -40,7 +40,6 @@ public class GameScreen implements Screen {
     private float restartCooldown = 0f;
     // HUD variables
     private float timer;
-    private int points;
     private int lives;
     private boolean gameOver;
 
@@ -85,7 +84,6 @@ public class GameScreen implements Screen {
 
         // Initialize HUD variables
         timer = 0;
-        points = 0;
         lives = 3;  // For example, the player starts with 3 lives
         gameOver = false;
 
@@ -292,7 +290,7 @@ public class GameScreen implements Screen {
         batch.draw(characterTexture, offsetX + character.getX() * CELL_SIZE, offsetY + (maze.getHeight() - character.getY() - 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     }
 
-    private int drawBomb(float offsetX, float offsetY, float delta){
+    private void drawBomb(float offsetX, float offsetY, float delta){
         int score = 0;
         for (Iterator<Bomb> iterator = character.getBombs().iterator(); iterator.hasNext();) {
             Bomb bomb = iterator.next();
@@ -307,7 +305,6 @@ public class GameScreen implements Screen {
                 enemies.removeIf(Enemy::isDead);
             }
         }
-        return score;
     }
 
     /**
@@ -366,14 +363,6 @@ public class GameScreen implements Screen {
         int minutes = (int) timeInSeconds / 60;
         int seconds = (int) timeInSeconds % 60;
         return String.format("%02d:%02d", minutes, seconds);
-    }
-
-    private int getBombScore(){
-        int bombScore = 0;
-        for (Bomb bomb : bombs){
-            bombScore += bomb.getBombScore();
-        }
-        return  bombScore;
     }
 
     // Method to call when the game is finished

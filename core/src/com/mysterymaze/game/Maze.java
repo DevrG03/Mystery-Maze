@@ -265,10 +265,6 @@ public class Maze {
         chestScore = 50;
     }
 
-    public boolean isChestOpen() {
-        return chestOpen;
-    }
-
     public int getChestX() {
         return chestX;
     }
@@ -287,14 +283,6 @@ public class Maze {
 
     public int getKeyY() {
         return keyY;
-    }
-
-    public int getDoorX() {
-        return doorX;
-    }
-
-    public int getDoorY() {
-        return doorY;
     }
 
     // Add a method to open the door

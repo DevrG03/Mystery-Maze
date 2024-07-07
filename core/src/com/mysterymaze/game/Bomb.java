@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
 
 public class Bomb {
     private final int x;
@@ -173,9 +172,5 @@ public class Bomb {
                 }
             }
         }
-    }
-
-    public int getBombScore(){
-        return bombScore;
     }
 }
