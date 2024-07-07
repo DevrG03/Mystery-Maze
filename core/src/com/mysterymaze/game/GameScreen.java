@@ -157,7 +157,7 @@ public class GameScreen implements Screen {
         game.font2.draw(batch, "Points: " + (character.getScore() + bombScore + maze.getChestScore()), 10, viewport.getWorldHeight() - 30);
         game.font3.draw(batch, "Lives: " + lives, 10, viewport.getWorldHeight() - 50);
         game.font3.draw(batch, "High\nScore:" + highScore, 10, viewport.getWorldHeight() - 70);
-        game.font2.draw(batch, "\n\nControls:\nWASD\nArrow Keys\nBomb:B\nPlay\\Pause:P\nMainMenu:M\nRestart:R\nReset\nHighScore:O", 10, viewport.getWorldHeight() - 90);
+        game.font2.draw(batch, "\n\nControls:\nWASD\nArrow Keys\nBomb:B\nPlay\\Pause:P\nMainMenu:M\nRestart:R\nReset:O", 10, viewport.getWorldHeight() - 90);
         batch.end();
     }
 
