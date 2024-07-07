@@ -32,8 +32,9 @@ public class GameScreen implements Screen {
     private final Texture bombTexture, flashTexture, coinTexture, thornTexture, closedChestTexture, openedChestTexture;
     List<Bomb> bombs;
     private boolean gameFinished = false;
-    private float finishTimer = 0f;
     private  int bombScore = 0;
+    private boolean isRestarting = false;
+    private float restartCooldown = 0f;
     // HUD variables
     private float timer;
     private int points;
@@ -97,7 +98,7 @@ public class GameScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         handlePauseInput();
-        handleRestartInput();
+        handleRestartInput(delta);
 
         // Update the camera
         camera.update();
@@ -243,9 +244,6 @@ public class GameScreen implements Screen {
     private void handleInput() {
         boolean moved = false;
         moved = character.handleInput(maze, moved, this);
-        if (Gdx.input.isKeyPressed(Input.Keys.R)){
-            restartGame();
-        }
         if (moved) {
             checkCollisions();
         }
@@ -329,9 +327,19 @@ public class GameScreen implements Screen {
     /**
      * Handles input for restarting the game.
      */
-    private void handleRestartInput() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.R) && gameOver) {
+    private void handleRestartInput(float delta) {
+        if (isRestarting) {
+            restartCooldown -= delta;
+            if (restartCooldown <= 0) {
+                isRestarting = false;
+            }
+            return;
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.R) && (gameOver || gameFinished)) {
             restartGame();
+            isRestarting = true;
+            restartCooldown = 3f; // Set cooldown to 3 seconds
         }
     }
 
@@ -343,6 +351,7 @@ public class GameScreen implements Screen {
         points = 0;
         lives = 3;
         gameOver = false;
+        gameFinished = false;
         paused = false;
         character.setPosition(1, 1);
         enemies.clear();
