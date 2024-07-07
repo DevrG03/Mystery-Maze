@@ -3,6 +3,17 @@
 ## Introduction
 Welcome to the Mystery Maze game repository! This game is developed using LibGDX and features a maze-based adventure where the player navigates through a maze while avoiding enemies.
 
+## Milesontes 
+- [x] Milestone 1
+- [x] Milestone 2
+- [x] Milestone 3
+- [x] Milestone 4
+- [x] Milestone 5
+- [ ] Milestone 6
+- [x] Milestone 7
+- [ ] Milestone 8
+
+
 ## Classes Overview
 
 ### MysteryMaze
