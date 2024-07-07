@@ -197,6 +197,10 @@ public class Hero {
         }
     }
 
+    public void setScore(){
+        score = 0;
+    }
+
 
     public void collectCoin(int x, int y, Maze maze) {
         int a = maze.coins.size();
@@ -204,6 +208,7 @@ public class Hero {
         int b = maze.coins.size();
         if(a>b){
             score += 1;
+            maze.pickUpSound.play()
   ;      }
     }
 

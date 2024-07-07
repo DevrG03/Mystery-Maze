@@ -82,9 +82,9 @@ public class Enemy {
                 if (isChasing) {
                     // Hero went out of range or is obstructed, reset path and revert to patrol
                     resetPath();
-                    revertToPatrol();
+                    revertToPatrol(maze);
                 } else {
-                    patrol();
+                    patrol(maze);
                 }
             }
             timeSinceLastMove = 0f;  // Reset movement cooldown
@@ -151,7 +151,7 @@ public class Enemy {
     /**
      * Return to the patrol path after chasing the hero.
      */
-    private void revertToPatrol() {
+    private void revertToPatrol(Maze maze) {
         isChasing = false;
         if (returnPath == null) {
             int[] patrolStart = patrolPath.get(0);
@@ -164,7 +164,7 @@ public class Enemy {
             y = nextStep[1];
             pathStep++;
         } else {
-            patrol();
+            patrol(maze);
             resetPath(); // Reached the start of the patrol path, reset to patrol mode
         }
     }
@@ -172,25 +172,47 @@ public class Enemy {
     /**
      * Patrol along the predefined path.
      */
-    private void patrol() {
+    private void patrol(Maze maze) {
         if (patrolPath.isEmpty()) {
             return; // No patrol path defined
         }
-        if (movingForward) {
-            pathIndex++;
-            if (pathIndex >= patrolPath.size()) {
-                pathIndex = patrolPath.size() - 1; // Stay at the end of the path
-                movingForward = false;
+
+        int nextIndex = movingForward ? pathIndex + 1 : pathIndex - 1;
+
+        if (nextIndex >= 0 && nextIndex < patrolPath.size()) {
+            int[] nextPosition = patrolPath.get(nextIndex);
+            int nextX = nextPosition[0];
+            int nextY = nextPosition[1];
+
+            // Check if the next position contains thorns
+            if (!containsThorns(nextX, nextY, maze)) {
+                pathIndex = nextIndex;
+                x = nextX;
+                y = nextY;
+            } else {
+                // Reverse direction if the next position contains thorns
+                movingForward = !movingForward;
             }
         } else {
-            pathIndex--;
-            if (pathIndex < 0) {
-                pathIndex = 0; // Stay at the start of the path
-                movingForward = true;
+            // Reverse direction if we reach the end of the patrol path
+            movingForward = !movingForward;
+        }
+    }
+
+    /**
+     * Checks if a given position contains thorns.
+     *
+     * @param x The x coordinate to check
+     * @param y The y coordinate to check
+     * @return true if the position contains thorns, false otherwise
+     */
+    private boolean containsThorns(int x, int y, Maze maze) {
+        for (int[] thorn : maze.getThorns()) {
+            if (thorn[0] == x && thorn[1] == y) {
+                return true;
             }
         }
-        x = patrolPath.get(pathIndex)[0];
-        y = patrolPath.get(pathIndex)[1];
+        return false;
     }
 
     public void setDead(boolean dead) {

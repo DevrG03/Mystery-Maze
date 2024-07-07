@@ -1,5 +1,6 @@
 package com.mysterymaze.game;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -10,6 +11,7 @@ import java.util.*;
  * Provides methods to generate the maze, check positions, and draw the maze using textures.
  */
 public class Maze {
+    public Sound pickUpSound;
     private final int width;
     private final int height;
     private final int[][] maze;
@@ -30,7 +32,8 @@ public class Maze {
      * @param width  The width of the maze
      * @param height The height of the maze
      */
-    public Maze(int width, int height) {
+    public Maze(int width, int height, Sound pickUpSound) {
+        this.pickUpSound = pickUpSound;
         this.width = width;
         this.height = height;
         maze = new int[width][height];
@@ -117,6 +120,11 @@ public class Maze {
 
     public void removeKey() {
         keyPickedUp = true;
+        pickUpSound.play();
+    }
+
+    public void resetScore() {
+        chestScore = 0;
     }
 
     /**
@@ -250,6 +258,9 @@ public class Maze {
     }
 
     public void openChest() {
+        if (!chestOpen) {
+            pickUpSound.play();
+        }
         chestOpen = true;
         chestScore = 50;
     }
@@ -291,6 +302,13 @@ public class Maze {
         if (!doorOpen) {
             doorOpen = true;
             maze[doorX][doorY] = 1; // Convert door to path
+        }
+    }
+
+    public void closeDoor(){
+        if (doorOpen) {
+            doorOpen = false;
+            maze[doorX][doorY] = 0;
         }
     }
 

@@ -1,6 +1,7 @@
 package com.mysterymaze.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -17,19 +18,20 @@ public class Bomb {
     private float flashTimer;
     private final int flashRadius;
     private int bombScore = 0;
+    private final Sound explosionSound = Gdx.audio.newSound(Gdx.files.internal("sounds/bomb.mp3"));
 
     private static final float TIME_TO_EXPLODE = 3f; // 3 seconds until explosion
     private static final float FLASH_DURATION = 0.4f; // 0.4 seconds flash duration
     private static final int DEFAULT_FLASH_RADIUS = 2; // Default flash radius in cells
 
     public Bomb(int x, int y) {
-        this.x = x;
-        this.y = y;
-        this.timer = 0f;
-        this.exploded = false;
-        this.flashActive = false;
-        this.flashTimer = 0f;
-        this.flashRadius = DEFAULT_FLASH_RADIUS; // Set default flash radius
+            this.x = x;
+            this.y = y;
+            this.timer = 0f;
+            this.exploded = false;
+            this.flashActive = false;
+            this.flashTimer = 0f;
+            this.flashRadius = DEFAULT_FLASH_RADIUS;// Set default flash radius
     }
 
     public int getX() {
@@ -61,9 +63,9 @@ public class Bomb {
 
     private int explode(Hero hero, List<Enemy> enemies, Maze maze) {
         exploded = true;
+        explosionSound.play();
         flashActive = true;
         flashTimer = 0f;
-
         Gdx.app.log("Bomb", "Exploding at (" + x + ", " + y + ")");
 
         // Log bomb position and flash radius

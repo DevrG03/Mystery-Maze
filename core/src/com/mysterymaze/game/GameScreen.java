@@ -3,6 +3,7 @@ package com.mysterymaze.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -16,12 +17,14 @@ import java.util.*;
  * Represents the main game screen where the maze, character, and enemies are displayed and controlled.
  */
 public class GameScreen implements Screen {
+    private Sound pickUpSound;
+    private Sound bgSound = Gdx.audio.newSound(Gdx.files.internal("sounds/loop.mp3"));;
     private final MysteryMaze game;
     private final SpriteBatch batch;
     private final Texture wallTexture1, wallTexture2, floorTexture;
     private final Texture characterTexture, enemyTexture;
     private final Texture doorTexture, keyTexture;
-    private final Maze maze;
+    private Maze maze;
     private final Hero character;
     private static final int CELL_SIZE = 20;
     private final java.util.List<Enemy> enemies;
@@ -62,7 +65,9 @@ public class GameScreen implements Screen {
         thornTexture = new Texture(Gdx.files.internal("V01_Obstacle.png"));
         closedChestTexture = new Texture(Gdx.files.internal("V01_Chest.png"));
         openedChestTexture = new Texture(Gdx.files.internal("V01_Chest_Open.png"));
-        maze = new Maze(21, 21);  // Create a 21x21 maze
+        pickUpSound = Gdx.audio.newSound(Gdx.files.internal("sounds/pickup.mp3"));
+        bgSound.loop();
+        maze = new Maze(21, 21, pickUpSound);  // Create a 21x21 maze
         character = new Hero(1, 1);
         enemies = new ArrayList<>();
         bombs = new ArrayList<>();
@@ -108,9 +113,14 @@ public class GameScreen implements Screen {
         // Draw game elements
         if (gameFinished) {
             // Display "Game Finished" message
-            batch.begin();
-            game.font.draw(batch, "Game Finished \nYour Score: " + (character.getScore() + bombScore + maze.getChestScore() + lives) , (float) Gdx.graphics.getWidth() / 2 - 115, (float) Gdx.graphics.getHeight() / 2 + 10);
-            batch.end();
+            if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+                restartGame();
+            } else {
+                // Display "Game Finished" message
+                batch.begin();
+                game.font.draw(batch, "Game Finished \nYour Score: " + (character.getScore() + bombScore + maze.getChestScore() + lives), (float) Gdx.graphics.getWidth() / 2 - 115, (float) Gdx.graphics.getHeight() / 2 + 10);
+                batch.end();
+            }
         }
         else if (!paused && !gameOver) {
             timer += delta;
@@ -347,15 +357,9 @@ public class GameScreen implements Screen {
      * Restarts the game by reinitializing necessary variables.
      */
     private void restartGame() {
-        timer = 0;
-        points = 0;
-        lives = 3;
-        gameOver = false;
-        gameFinished = false;
-        paused = false;
-        character.setPosition(1, 1);
-        enemies.clear();
-        placeEnemies(5);
+        resetGameElements();
+        isRestarting = true;
+        restartCooldown = 3f;
     }
 
     private String formatTime(float timeInSeconds) {
@@ -375,6 +379,28 @@ public class GameScreen implements Screen {
     // Method to call when the game is finished
     public void finishGame() {
         gameFinished = true;
+    }
+
+    private void resetGameElements() {
+        maze = new Maze(21, 21, pickUpSound);
+        float offsetX = (viewport.getWorldWidth() - maze.getWidth() * CELL_SIZE) / 2;
+        float offsetY = (viewport.getWorldHeight() - maze.getHeight() * CELL_SIZE) / 2;
+        batch.begin();
+        maze.drawMaze(batch, (int) offsetX, (int) offsetY, CELL_SIZE, wallTexture1, wallTexture2, floorTexture, doorTexture, keyTexture, coinTexture, thornTexture, closedChestTexture, openedChestTexture);
+        batch.end();
+        character.setPosition(1, 1);
+        enemies.clear();
+        placeEnemies(5);
+        bombs.clear();
+        bombScore = 0;
+        gameOver = false;
+        gameFinished = false;
+        paused = false;
+        timer = 0;
+        character.setScore();
+        maze.resetScore();
+        lives = 3;
+        maze.closeDoor();
     }
 
     @Override
