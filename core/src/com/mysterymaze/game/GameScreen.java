@@ -2,6 +2,7 @@ package com.mysterymaze.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
@@ -17,8 +18,13 @@ import java.util.*;
  * Represents the main game screen where the maze, character, and enemies are displayed and controlled.
  */
 public class GameScreen implements Screen {
-    private Sound pickUpSound;
-    private Sound bgSound = Gdx.audio.newSound(Gdx.files.internal("sounds/loop.mp3"));;
+    private Preferences preferences;
+    private int highScore;
+    private final Sound pickUpSound = Gdx.audio.newSound(Gdx.files.internal("sounds/pickup.mp3"));
+    private final Sound bgSound = Gdx.audio.newSound(Gdx.files.internal("sounds/loop.mp3"));
+    private final Sound winSound = Gdx.audio.newSound(Gdx.files.internal("sounds/win.mp3"));
+    private final Sound deathSound = Gdx.audio.newSound(Gdx.files.internal("sounds/herodeath.mp3"));
+    private final Sound overSound = Gdx.audio.newSound(Gdx.files.internal("sounds/over.mp3"));
     private final MysteryMaze game;
     private final SpriteBatch batch;
     private final Texture wallTexture1, wallTexture2, floorTexture;
@@ -49,6 +55,8 @@ public class GameScreen implements Screen {
      * @param game The main game instance
      */
     public GameScreen(final MysteryMaze game) {
+        preferences = Gdx.app.getPreferences("MysteryMazePreferences");
+        highScore = preferences.getInteger("highScore", 0);
         this.game = game;
         doorTexture = new Texture(Gdx.files.internal("V01_Door.png"));
         keyTexture = new Texture(Gdx.files.internal("V01_Key.png"));
@@ -64,7 +72,6 @@ public class GameScreen implements Screen {
         thornTexture = new Texture(Gdx.files.internal("V01_Obstacle.png"));
         closedChestTexture = new Texture(Gdx.files.internal("V01_Chest.png"));
         openedChestTexture = new Texture(Gdx.files.internal("V01_Chest_Open.png"));
-        pickUpSound = Gdx.audio.newSound(Gdx.files.internal("sounds/pickup.mp3"));
         bgSound.loop();
         maze = new Maze(21, 21, pickUpSound);  // Create a 21x21 maze
         character = new Hero(1, 1);
@@ -86,13 +93,10 @@ public class GameScreen implements Screen {
         timer = 0;
         lives = 3;  // For example, the player starts with 3 lives
         gameOver = false;
-
-        Gdx.app.log("MysteryMaze", "Maze created");
     }
 
     @Override
     public void show() {
-        // Called when this screen becomes the current screen for a Game
     }
 
     @Override
@@ -101,7 +105,9 @@ public class GameScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         handlePauseInput();
+        handleResetInput();
         handleRestartInput(delta);
+        handleMenuInput();
 
         // Update the camera
         camera.update();
@@ -116,7 +122,7 @@ public class GameScreen implements Screen {
             } else {
                 // Display "Game Finished" message
                 batch.begin();
-                game.font.draw(batch, "Game Finished \nYour Score: " + (character.getScore() + bombScore + maze.getChestScore() + lives), (float) Gdx.graphics.getWidth() / 2 - 115, (float) Gdx.graphics.getHeight() / 2 + 10);
+                game.font.draw(batch, "   You Won! \nYour Score: " + (character.getScore() + bombScore + maze.getChestScore() + lives), (float) Gdx.graphics.getWidth() / 2 - 115, (float) Gdx.graphics.getHeight() / 2 + 10);
                 batch.end();
             }
         }
@@ -149,15 +155,32 @@ public class GameScreen implements Screen {
         batch.begin();
         game.font2.draw(batch, "Time: " + formatTime(timer), 10, viewport.getWorldHeight() - 10);
         game.font2.draw(batch, "Points: " + (character.getScore() + bombScore + maze.getChestScore()), 10, viewport.getWorldHeight() - 30);
-        game.font2.draw(batch, "Lives: " + lives, 10, viewport.getWorldHeight() - 50);
-        game.font2.draw(batch, "Controls:\nWASD\nArrow Keys\nBomb:B\nPlay\\Pause:P\nRestart:R", 10, viewport.getWorldHeight() - 70);
+        game.font3.draw(batch, "Lives: " + lives, 10, viewport.getWorldHeight() - 50);
+        game.font3.draw(batch, "High\nScore:" + highScore, 10, viewport.getWorldHeight() - 70);
+        game.font2.draw(batch, "\n\nControls:\nWASD\nArrow Keys\nBomb:B\nPlay\\Pause:P\nMainMenu:M\nRestart:R\nReset\nHighScore:O", 10, viewport.getWorldHeight() - 90);
         batch.end();
+    }
+
+    private void handleResetInput() {
+        if (Gdx.input.isKeyPressed(Input.Keys.O)){
+            highScore = 0;
+            preferences.putInteger("highScore", 0);
+            preferences.flush();
+        }
+    }
+
+    private void handleMenuInput() {
+        if (Gdx.input.isKeyPressed(Input.Keys.M)){
+            bgSound.pause();
+            game.setScreen(new MainMenuScreen(game));
+        }
     }
 
     /**
      * Places a specified number of enemies in valid positions within the maze.
      *
      * @param numberOfEnemies The number of enemies to place in the maze
+     * @example placeEnemies(5) will place 5 enemies in the maze
      */
     private void placeEnemies(int numberOfEnemies) {
         Random random = new Random();
@@ -186,6 +209,7 @@ public class GameScreen implements Screen {
      * @param y                The y coordinate to check
      * @param occupiedPositions Set of occupied positions to compare against
      * @return true if the position is too close to others, false otherwise
+     * @example isTooCloseToOthers(3, 4, occupiedPositions) will check if the position (3, 4) is too close to any occupied positions
      */
     private boolean isTooCloseToOthers(int x, int y, Set<int[]> occupiedPositions) {
         for (int[] pos : occupiedPositions) {
@@ -205,6 +229,7 @@ public class GameScreen implements Screen {
      * @param startY   The starting y coordinate for the enemy
      * @param mazeArray The maze represented as a 2D array
      * @return A list of coordinates representing the enemy's patrol path
+     * @example generatePatrolPath(2, 3, mazeArray) will generate a patrol path for an enemy starting at position (2, 3)
      */
     private List<int[]> generatePatrolPath(int startX, int startY, int[][] mazeArray) {
         List<int[]> path = new ArrayList<>();
@@ -274,13 +299,16 @@ public class GameScreen implements Screen {
      */
     private void onCharacterDeath() {
         lives--;
+        deathSound.play();
         if (lives <= 0) {
             gameOver = true;
+            lives = 0;
+            bgSound.pause();
+            overSound.play();
             paused = true; // Pause the game on game over
         } else {
             character.setPosition(1, 1); // Reset character position
         }
-        Gdx.app.log("MysteryMaze", "Hero Died!");
     }
 
     /**
@@ -323,6 +351,12 @@ public class GameScreen implements Screen {
      */
     private void handlePauseInput() {
         // Toggle pause state on key press, e.g., P key
+        if (paused) {
+            bgSound.pause();
+        } else {
+            bgSound.resume();
+        }
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.P) && !justPaused) {
             paused = !paused;
             justPaused = true;
@@ -367,9 +401,22 @@ public class GameScreen implements Screen {
 
     // Method to call when the game is finished
     public void finishGame() {
+        winSound.play();
+        bgSound.pause();
         gameFinished = true;
+        int totalScore = character.getScore() + bombScore + maze.getChestScore() + lives;
+
+        if (totalScore > highScore) {
+            highScore = totalScore;
+            preferences.putInteger("highScore", highScore);
+            preferences.flush(); // Save the preferences
+        }
+
     }
 
+    /**
+     * Resets the game by reinitializing necessary variables.
+     */
     private void resetGameElements() {
         maze = new Maze(21, 21, pickUpSound);
         float offsetX = (viewport.getWorldWidth() - maze.getWidth() * CELL_SIZE) / 2;

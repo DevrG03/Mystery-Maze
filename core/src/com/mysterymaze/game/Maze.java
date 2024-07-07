@@ -125,6 +125,7 @@ public class Maze {
 
     public void resetScore() {
         chestScore = 0;
+        doorOpen = false;
     }
 
     /**

@@ -10,13 +10,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Slider;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 /**
  * Represents the main menu screen of the game.
@@ -42,10 +35,10 @@ public class MainMenuScreen implements Screen {
         camera.setToOrtho(false, 800, 480); // Adjust resolution as needed
         batch = new SpriteBatch();
         background = new Texture(Gdx.files.internal("V01_Tile3.png")); // Replace with your background image
-        playButtonActive = new Texture(Gdx.files.internal("flatDark15.png")); // Replace with your play button active image
-        playButtonInactive = new Texture(Gdx.files.internal("flatDark15.png")); // Replace with your play button inactive image
-        exitButtonActive = new Texture(Gdx.files.internal("flatDark23.png")); // Replace with your exit button active image
-        exitButtonInactive = new Texture(Gdx.files.internal("flatDark23.png")); // Replace with your exit button inactive image
+        playButtonActive = new Texture(Gdx.files.internal("lineLight14.png")); // Replace with your play button active image
+        playButtonInactive = new Texture(Gdx.files.internal("lineDark11.png")); // Replace with your play button inactive image
+        exitButtonActive = new Texture(Gdx.files.internal("lineLight33.png")); // Replace with your exit button active image
+        exitButtonInactive = new Texture(Gdx.files.internal("lineDark30.png")); // Replace with your exit button inactive image
         playButtonBounds = new Rectangle(350, 200, playButtonActive.getWidth(), playButtonActive.getHeight()); // Adjust button position
         exitButtonBounds = new Rectangle(350, 100, exitButtonActive.getWidth(), exitButtonActive.getHeight()); // Adjust button position
         touchPoint = new Vector3();
@@ -76,20 +69,19 @@ public class MainMenuScreen implements Screen {
         // Begin batch and draw background
         batch.begin();
         batch.draw(background, 0, 0, 800, 480); // Adjust background size
-        titleFont.draw(batch, "Mystery Maze", 300, 400); // Adjust title position
+        game.font.draw(batch, "Mystery Maze", 250, 400); // Adjust title position
 
         // Draw play button based on touch state
-        if (playButtonBounds.contains(touchPoint.x, touchPoint.y)) {
+        if (playButtonBounds.contains(touchPoint.x,  touchPoint.y)) {
             batch.draw(playButtonActive, playButtonBounds.x, playButtonBounds.y);
         } else {
-            batch.draw(playButtonInactive, playButtonBounds.x, playButtonBounds.y);
+            batch.draw(playButtonInactive, playButtonBounds.x , playButtonBounds.y);
         }
-
         // Draw exit button based on touch state
-        if (exitButtonBounds.contains(touchPoint.x, touchPoint.y)) {
-            batch.draw(exitButtonActive, exitButtonBounds.x, exitButtonBounds.y);
+        if (exitButtonBounds.contains(touchPoint.x , touchPoint.y)) {
+            batch.draw(exitButtonActive, exitButtonBounds.x , exitButtonBounds.y);
         } else {
-            batch.draw(exitButtonInactive, exitButtonBounds.x, exitButtonBounds.y);
+            batch.draw(exitButtonInactive, exitButtonBounds.x , exitButtonBounds.y);
         }
         batch.end();
 

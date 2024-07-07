@@ -12,7 +12,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
  */
 public class MysteryMaze extends Game {
 	public SpriteBatch batch;   // SpriteBatch for rendering
-	public BitmapFont font,font2;// BitmapFont for displaying text
+	public BitmapFont font,font2,font3;// BitmapFont for displaying text
 
 	/**
 	 * Called when the application is first created.
@@ -30,6 +30,8 @@ public class MysteryMaze extends Game {
 		font = generator.generateFont(parameter);
 		parameter.size = 14;
 		font2 = generator.generateFont(parameter);
+		parameter.size = 20;
+		font3 = generator.generateFont(parameter);
 
 		setScreen(new MainMenuScreen(this)); // Set initial screen to MainMenuScreen
 	}

@@ -6,30 +6,40 @@ import java.util.List;
  * Represents an enemy in the game that patrols and may chase the hero.
  */
 public class Enemy {
-    private int x;  // Current x-coordinate of the enemy
-    private int y;  // Current y-coordinate of the enemy
-    private final List<int[]> patrolPath;  // List of coordinates for the enemy's patrol path
-    private int pathIndex;  // Index of the current position in the patrol path
-    private boolean movingForward;  // Flag indicating direction of patrol
+    private int x; // Current x-coordinate of the enemy
+    private int y; // Current y-coordinate of the enemy
+    private final List<int[]> patrolPath; // List of coordinates for the enemy's patrol path
+    private int pathIndex; // Index of the current position in the patrol path
+    private boolean movingForward; // Flag indicating direction of patrol
 
-    private float timeSinceLastMove = 0f;  // Time elapsed since the last movement
-    private boolean isChasing = false;  // Flag indicating if the enemy is currently chasing the hero
+    private float timeSinceLastMove = 0f; // Time elapsed since the last movement
+    private boolean isChasing = false; // Flag indicating if the enemy is currently chasing the hero
 
-    private final Hero hero;  // Reference to the hero character
-    private final Pathfinding pathfinding;  // Object for pathfinding operations
-    private List<int[]> currentPath;  // Current path for the enemy's movement
-    private int pathStep;  // Index of the current step in the path
-    private List<int[]> returnPath;  // Path to return to patrol after chasing
+    private final Hero hero; // Reference to the hero character
+    private final Pathfinding pathfinding; // Object for pathfinding operations
+    private List<int[]> currentPath; // Current path for the enemy's movement
+    private int pathStep; // Index of the current step in the path
+    private List<int[]> returnPath; // Path to return to patrol after chasing
     private boolean dead;
 
     /**
-     * Constructor to initialize an enemy with a patrol path, hero reference, and maze for pathfinding.
+     * Constructor to initialize an enemy with a patrol path, hero reference, and
+     * maze for pathfinding.
      *
      * @param x          Initial x-coordinate
      * @param y          Initial y-coordinate
      * @param patrolPath List of coordinates defining the patrol path
      * @param hero       Reference to the hero character
      * @param maze       Maze object for pathfinding and obstruction checks
+     * 
+     *                   Example:
+     * 
+     *                   <pre>{@code
+     *                   List<int[]> patrolPath = Arrays.asList(new int[] { 1, 1 }, new int[] { 2, 2 }, new int[] { 3, 3 });
+     *                   Hero hero = new Hero(5, 5);
+     *                   Maze maze = new Maze(10, 10);
+     *                   Enemy enemy = new Enemy(0, 0, patrolPath, hero, maze);
+     * }</pre>
      */
     public Enemy(int x, int y, List<int[]> patrolPath, Hero hero, Maze maze) {
         this.x = x;
@@ -64,14 +74,22 @@ public class Enemy {
     }
 
     /**
-     * Update method called to process enemy behavior based on time and maze conditions.
+     * Update method called to process enemy behavior based on time and maze
+     * conditions.
      *
      * @param deltaTime Time elapsed since the last update
      * @param maze      Maze object for pathfinding and obstruction checks
+     * 
+     *                  Example:
+     * 
+     *                  <pre>{@code
+     * Enemy enemy = new Enemy(0, 0, patrolPath, hero, maze);
+     * enemy.update(0.5f, maze);
+     * }</pre>
      */
     public void update(float deltaTime, Maze maze) {
         timeSinceLastMove += deltaTime;
-        float movementCooldown = 0.9f;  // Adjust this value to control the speed of enemy movement
+        float movementCooldown = 0.9f; // Adjust this value to control the speed of enemy movement
 
         // Check if enough time has passed to allow movement
         if (timeSinceLastMove >= movementCooldown) {
@@ -87,7 +105,7 @@ public class Enemy {
                     patrol(maze);
                 }
             }
-            timeSinceLastMove = 0f;  // Reset movement cooldown
+            timeSinceLastMove = 0f; // Reset movement cooldown
         }
     }
 
@@ -104,7 +122,7 @@ public class Enemy {
     }
 
     /**
-     * Check if the hero is visible to the enemy (line of sight and no obstacles).
+     * Check if the hero is visible to the enemy (line of sightand no obstacles).
      *
      * @param maze Maze object for obstruction checks
      * @return True if hero is visible and within range, false otherwise

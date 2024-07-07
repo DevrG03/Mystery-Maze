@@ -127,9 +127,9 @@ public class Hero {
                 moved = true; // Indicate movement occurred (dropping bomb is considered an action)
             }
         }
-        if (moved){
+        if (moved) {
             checkForKeyAndDoor(maze, gameScreen);
-            collectCoin(x,y,maze);
+            collectCoin(x, y, maze);
             if (x == maze.getChestX() && y == maze.getChestY()) {
                 maze.openChest();
             }
@@ -153,7 +153,6 @@ public class Hero {
 
     private void dropBomb() {
         bombs.add(new Bomb(this.x, this.y));
-        Gdx.app.log("MysteryMaze","Bomb Dropped!");
     }
 
     /**
@@ -183,33 +182,30 @@ public class Hero {
         // Check if the hero is at the key position
         if (getX() == maze.getKeyX() && getY() == maze.getKeyY() && !hasKey) {
             hasKey = true; // Hero picks up the key
-            Gdx.app.log("MysteryMaze", "Key picked up!");
             maze.removeKey();
         }
 
         if (hasKey) {
             maze.openDoor();
-            Gdx.app.log("MysteryMaze", "Door opened!");
-            if (maze.isAdjacentToDoor(getX(), getY())){
+            if (maze.isAdjacentToDoor(getX(), getY())) {
                 gameScreen.finishGame(); // Add this line
-                Gdx.app.log("MysteryMaze", "Game Finished");
             }
         }
     }
 
-    public void setScore(){
+    public void setScore() {
         score = 0;
+        hasKey = false;
     }
-
 
     public void collectCoin(int x, int y, Maze maze) {
         int a = maze.coins.size();
         maze.coins.removeIf(coin -> coin[0] == x && coin[1] == y);
         int b = maze.coins.size();
-        if(a>b){
+        if (a > b) {
             score += 1;
-            maze.pickUpSound.play()
-  ;      }
+            maze.pickUpSound.play();
+        }
     }
 
     public int getScore() {
