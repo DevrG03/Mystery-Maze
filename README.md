@@ -63,4 +63,4 @@ Welcome to the Mystery Maze game repository! This game is developed using LibGDX
 
 
 ## Credits
-- Made with ❤️ and Java by Devrajsinh Gohil
+Made with ❤️ and Java by Devrajsinh Gohil
