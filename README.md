@@ -9,9 +9,9 @@ Welcome to the Mystery Maze game repository! This game is developed using LibGDX
 - [x] Milestone 3
 - [x] Milestone 4
 - [x] Milestone 5
-- [ ] Milestone 6
+- [x] Milestone 6
 - [x] Milestone 7
-- [ ] Milestone 8
+- [x] Milestone 8
 
 
 ## Classes Overview
@@ -56,6 +56,11 @@ Welcome to the Mystery Maze game repository! This game is developed using LibGDX
 - **Responsibilities**: Used for rendering walls and floors efficiently in the maze.
 - **Key Features**: Optimized algorithms for drawing lines in 2D grid-based environments.
 
+### Bomb
+- **Purpose**: Provides all the algorithms for the bomb.
+- **Responsibilities**: Used for explosions to kill enemy and open paths through thorns.
+- **Key Features**: Explosion algorithm optimized to affect in certain range and kills hero as well as enemy in range.
+
 
 ## Credits
-- Developed by Devrajsinh Gohil (Still under developement 👨‍💻!!!)
+- Made with ❤️ and Java by Devrajsinh Gohil
