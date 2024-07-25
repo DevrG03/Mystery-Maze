@@ -3,6 +3,8 @@
 ## Introduction
 Welcome to the Mystery Maze game repository! This game is developed using LibGDX and features a maze-based adventure where the player navigates through a maze while avoiding enemies.
 
+## Demo Link: 
+- 🔗 [Demo](https://drive.google.com/drive/folders/1w4GlfvgHvNymEj8fu7lgiaPjORSS7CDF?usp=sharing)
 
 ## Classes Overview
 
